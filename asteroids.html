@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Asteroids</title><style>html,body{margin:0;background:#000;color:#fff;overflow:hidden;font-family:Arial}canvas{display:block;margin:auto;background:#050505}</style></head><body><canvas id=c width=900 height=600></canvas><script>
+const c=document.querySelector('#c'),x=c.getContext('2d');let keys={},bullets=[],rocks=[],score=0,ship={x:450,y:300,a:0,vx:0,vy:0};onkeydown=e=>keys[e.key]=1;onkeyup=e=>keys[e.key]=0;
+for(let i=0;i<8;i++)rocks.push({x:Math.random()*900,y:Math.random()*600,r:25+Math.random()*30,vx:Math.random()*2-1,vy:Math.random()*2-1});
+function loop(){x.clearRect(0,0,900,600);if(keys.ArrowLeft)ship.a-=.07;if(keys.ArrowRight)ship.a+=.07;if(keys.ArrowUp){ship.vx+=Math.cos(ship.a)*.12;ship.vy+=Math.sin(ship.a)*.12}ship.x=(ship.x+ship.vx+900)%900;ship.y=(ship.y+ship.vy+600)%600;
+x.save();x.translate(ship.x,ship.y);x.rotate(ship.a);x.strokeStyle='#fff';x.beginPath();x.moveTo(16,0);x.lineTo(-12,-10);x.lineTo(-7,0);x.lineTo(-12,10);x.closePath();x.stroke();x.restore();
+if(keys[' ']){if(!ship.cool){bullets.push({x:ship.x,y:ship.y,vx:Math.cos(ship.a)*7,vy:Math.sin(ship.a)*7});ship.cool=8}else ship.cool--}else ship.cool=0;
+x.strokeStyle='#aaa';rocks.forEach(r=>{r.x=(r.x+r.vx+900)%900;r.y=(r.y+r.vy+600)%600;x.beginPath();x.arc(r.x,r.y,r.r,0,7);x.stroke()});
+bullets.forEach(b=>{b.x=(b.x+b.vx+900)%900;b.y=(b.y+b.vy+600)%600;x.fillStyle='#fff';x.fillRect(b.x,b.y,3,3);rocks.forEach((r,i)=>{if(Math.hypot(b.x-r.x,b.y-r.y)<r.r){rocks.splice(i,1);score+=10}})});
+x.fillStyle='#fff';x.fillText('Score: '+score,15,25);requestAnimationFrame(loop)}loop();</script></body></html>
