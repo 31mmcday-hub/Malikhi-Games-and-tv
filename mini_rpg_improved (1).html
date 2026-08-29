@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini RPG with Maps & Editable Admin Panel</title>
+  <style>
+:root{
+  --bg:#080b14; --panel:#111827; --panel2:#182235; --line:rgba(255,255,255,.10);
+  --text:#eef2ff; --muted:#9aa7c2; --gold:#f6c453; --blue:#69b7ff;
+  --green:#62d39b; --red:#ff6b78; --purple:#a78bfa;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; padding:24px;
+  background:
+    radial-gradient(circle at 12% 8%,rgba(105,183,255,.13),transparent 28%),
+    radial-gradient(circle at 88% 92%,rgba(167,139,250,.11),transparent 30%),var(--bg);
+  color:var(--text); font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+#game{width:min(920px,100%);margin:0 auto}
+.header{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:16px}
+.brand .eyebrow{margin:0 0 5px;color:var(--gold);font-size:.72rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+.brand h1{margin:0;font-size:clamp(1.8rem,5vw,2.8rem);line-height:1}
+.brand p{margin:8px 0 0;color:var(--muted)}
+#adminBtn{float:none;background:rgba(246,196,83,.12);border:1px solid rgba(246,196,83,.35);color:var(--gold)}
+.game-shell{padding:12px;border:1px solid var(--line);border-radius:22px;background:rgba(17,24,39,.82);box-shadow:0 25px 80px rgba(0,0,0,.35);backdrop-filter:blur(12px)}
+#screen{display:block;width:100%;height:auto;aspect-ratio:1;border:2px solid rgba(255,255,255,.14);border-radius:15px;background:#101622;image-rendering:auto}
+#ui{margin-top:12px;padding:15px;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
+#stats{margin:0 0 10px;padding:12px 14px;border-radius:12px;background:var(--panel2);color:var(--muted);font-size:.9rem;line-height:1.7}
+#stats .player{color:var(--blue);font-weight:800}
+#inventory{margin:0 0 10px;color:var(--gold);font-weight:800}
+#log{height:105px;overflow-y:auto;background:#0a0f1a;color:#9ee7b7;padding:10px 12px;font-size:.86rem;line-height:1.65;border-radius:12px;border:1px solid var(--line)}
+#controls{margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{
+  background:#25324a;color:var(--text);border:1px solid var(--line);border-radius:10px;
+  padding:9px 14px;font:inherit;font-weight:750;cursor:pointer;transition:.18s ease
+}
+button:hover{background:#31415f;transform:translateY(-1px)}
+button:active{transform:translateY(0)}
+#controls button:first-child{background:var(--gold);color:#17120a;border-color:transparent}
+.enemy{color:var(--red)} .player{color:var(--blue)}
+#overlay{display:none;position:fixed;inset:0;background:rgba(3,6,12,.72);z-index:9;backdrop-filter:blur(5px)}
+#adminPanel{
+  display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:10;width:min(440px,calc(100% - 28px));max-height:90vh;overflow:auto;
+  padding:20px;border-radius:18px;border:1px solid rgba(246,196,83,.35);
+  background:#0d1422;box-shadow:0 30px 100px rgba(0,0,0,.6)
+}
+#adminPanel h3{margin:0 0 14px;font-size:1.4rem}
+#adminPanelClose{float:right;background:transparent;border:0;font-size:1.2rem;padding:4px 8px}
+#adminPanel label{margin-top:11px;display:block;color:var(--muted)}
+#adminPanel input,#adminPanel select{
+  margin-top:5px;width:100%;padding:8px;border-radius:8px;border:1px solid var(--line);
+  background:#182235;color:var(--text)
+}
+#adminPanel button{margin-top:7px}
+.statrow{display:grid;grid-template-columns:1fr 100px;gap:10px;align-items:center;margin-bottom:7px}
+.statrow label{margin:0}.statrow input{width:100%}
+#adminStats{padding:10px;border-radius:10px;background:#111b2d;color:var(--muted);line-height:1.6}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:11px;color:var(--muted);font-size:.78rem}
+.legend span{padding:5px 8px;background:#111827;border:1px solid var(--line);border-radius:8px}
+.touch-controls{display:none}
+@media(max-width:650px){
+  body{padding:12px}.header{align-items:flex-start;flex-direction:column}
+  #adminBtn{width:100%}.game-shell{padding:7px;border-radius:17px}
+  #ui{padding:10px}.touch-controls{display:grid;grid-template-columns:repeat(3,52px);justify-content:center;gap:6px;margin-top:10px}
+  .touch-controls button{height:44px;padding:0}.touch-controls .up{grid-column:2}.touch-controls .left{grid-column:1}.touch-controls .down{grid-column:2}.touch-controls .right{grid-column:3}
+  #controls{justify-content:center}.statrow{grid-template-columns:1fr 90px}
+}
+</style>
+</head>
+<body>
+<div id="game">
+  <header class="header">
+    <div class="brand">
+      <p class="eyebrow">Adventure • Explore • Battle</p>
+      <h1>⚔️ Realmbound</h1>
+      <p>A tiny RPG world with secrets, monsters, maps, and an admin toolkit.</p>
+    </div>
+    <button id="adminBtn" onclick="openAdmin()">⚙ Admin Panel</button>
+  </header>
+  <div class="game-shell">
+    <canvas id="screen" width="512" height="512"></canvas>
+  <div id="ui">
+    <div id="stats"></div>
+    <div id="inventory"></div>
+    <div id="log"></div>
+    <div id="controls"></div>
+    <div class="touch-controls">
+      <button class="up" onclick="move(0,-1)">▲</button>
+      <button class="left" onclick="move(-1,0)">◀</button>
+      <button class="down" onclick="move(0,1)">▼</button>
+      <button class="right" onclick="move(1,0)">▶</button>
+    </div>
+    <div class="legend">
+      <span>🧙 You</span><span>👾 Enemy</span><span>💚 Village</span><span>🟨 Teleport</span><span>🧪 Hidden Potion</span>
+    </div>
+  </div>
+  </div>
+</div>
+<div id="overlay"></div>
+<div id="adminPanel">
+  <button id="adminPanelClose" onclick="closeAdmin()">X</button>
+  <h3>Admin Panel</h3>
+  <div id="adminStats"></div>
+  <form id="adminStatsForm" onsubmit="applyStats(); return false;">
+    <div class="statrow"><label>HP:</label><input type="number" id="stat_hp" min="0"></div>
+    <div class="statrow"><label>Max HP:</label><input type="number" id="stat_maxhp" min="1"></div>
+    <div class="statrow"><label>XP:</label><input type="number" id="stat_xp" min="0"></div>
+    <div class="statrow"><label>Level:</label><input type="number" id="stat_lvl" min="1"></div>
+    <div class="statrow"><label>ATK:</label><input type="number" id="stat_atk" min="0"></div>
+    <div class="statrow"><label>DEF:</label><input type="number" id="stat_def" min="0"></div>
+    <div class="statrow"><label>Potions:</label><input type="number" id="stat_potions" min="0"></div>
+    <button type="submit">Apply Stats</button>
+  </form>
+  <label>Heal to Max:
+    <button onclick="adminHeal()">Heal</button>
+  </label>
+  <label>Give Potions:
+    <input type="number" id="givePotions" value="1" min="1" max="99">
+    <button onclick="adminGivePotions()">Give</button>
+  </label>
+  <label>Teleport:
+    <select id="mapSelect"></select>
+    X: <input type="number" id="tpX" value="1" min="0" max="15" style="width:30px">
+    Y: <input type="number" id="tpY" value="1" min="0" max="15" style="width:30px">
+    <button onclick="adminTeleport()">Go</button>
+  </label>
+  <label>
+    <input type="checkbox" id="adminInvincible" onchange="adminToggleInvincible()"> Invincible
+  </label>
+</div>
+<script>
+const TILESIZE = 32, MAP_W = 16, MAP_H = 16;
+const maps = {
+  'Overworld': [
+    "################",
+    "#..............#",
+    "#..####........#",
+    "#..#..#.....E..#",
+    "#..#..#........#",
+    "#..####........#",
+    "#.....V..#######",
+    "#...E..........#",
+    "#######........#",
+    "#..............#",
+    "#....E.....T...#",
+    "#..............#",
+    "#........#######",
+    "#..............#",
+    "#P.............#",
+    "################"
+  ],
+  'Village': [
+    "################",
+    "#..............#",
+    "#...H..H.......#",
+    "#..H....H......#",
+    "#..............#",
+    "#......H.......#",
+    "#...H..#######.#",
+    "#..............#",
+    "###.#####......#",
+    "#.......H......#",
+    "#....E.........#",
+    "#..............#",
+    "#........#######",
+    "#.....T........#",
+    "#......H.......#",
+    "################"
+  ],
+  'Dungeon': [
+    "################",
+    "#..E......E....#",
+    "#..####........#",
+    "#..#..#.....E..#",
+    "#..#..#........#",
+    "#..####........#",
+    "#........#######",
+    "#...E..........#",
+    "#######........#",
+    "#..............#",
+    "#....E.........#",
+    "#..............#",
+    "#........#######",
+    "#......T.......#",
+    "#...E..........#",
+    "################"
+  ]
+};
+
+const mapTransitions = {
+  'Overworld': { 6: {6: {to:'Village',x:1,y:14}}, 10: {12:{to:'Dungeon',x:1,y:1}} },
+  'Village': { 13: {6:{to:'Overworld',x:6,y:6}} },
+  'Dungeon': { 13: {6:{to:'Overworld',x:12,y:10}} }
+};
+
+let currentMap = 'Overworld';
+
+const player = {
+  x: 1, y: 14,
+  hp: 20, maxHp: 20,
+  xp: 0, lvl: 1,
+  atk: 4, def: 2,
+  potions: 2,
+  invincible: false
+};
+
+const enemies = [
+  {name:"Slime", hp:10, atk:3, def:1, xp:5},
+  {name:"Goblin", hp:14, atk:4, def:2, xp:8},
+  {name:"Wolf", hp:12, atk:5, def:1, xp:7},
+  {name:"Orc", hp:18, atk:6, def:3, xp:12}
+];
+
+let gameState = "explore"; // or "battle" or "dialog"
+let enemy = null;
+let enemyPos = null;
+let attackFx = 0;
+
+const canvas = document.getElementById("screen");
+const ctx = canvas.getContext("2d");
+const logElem = document.getElementById("log");
+const statsElem = document.getElementById("stats");
+const inventoryElem = document.getElementById("inventory");
+const controlsElem = document.getElementById("controls");
+const adminPanel = document.getElementById("adminPanel");
+const overlay = document.getElementById("overlay");
+const adminStats = document.getElementById("adminStats");
+
+function getMap() {
+  return maps[currentMap];
+}
+function setMap(name, x, y) {
+  currentMap = name;
+  player.x = x;
+  player.y = y;
+  drawMap();
+  updateStats();
+  updateInventory();
+  showExploreControls();
+  log(`<span class="player">You travel to ${name}!</span>`);
+}
+
+function drawMap() {
+  ctx.clearRect(0,0,512,512);
+  const map = getMap();
+
+  // Soft tiled floor + walls
+  for(let y=0;y<MAP_H;y++){
+    for(let x=0;x<MAP_W;x++){
+      const ch=map[y][x], px=x*TILESIZE, py=y*TILESIZE;
+      if(ch==="#"){
+        ctx.fillStyle="#1c2535"; ctx.fillRect(px,py,TILESIZE,TILESIZE);
+        ctx.fillStyle="rgba(255,255,255,.045)"; ctx.fillRect(px+1,py+1,TILESIZE-2,3);
+        ctx.strokeStyle="rgba(0,0,0,.25)"; ctx.strokeRect(px,py,TILESIZE,TILESIZE);
+      }else{
+        ctx.fillStyle=((x+y)%2===0)?"#243244":"#263648";
+        ctx.fillRect(px,py,TILESIZE,TILESIZE);
+        ctx.fillStyle="rgba(255,255,255,.025)";ctx.fillRect(px,py,TILESIZE,TILESIZE);
+      }
+      if(ch==="E"){
+        ctx.fillStyle="#e85d68";ctx.beginPath();ctx.arc(px+16,py+17,10,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(px+12,py+14,2,0,Math.PI*2);ctx.arc(px+20,py+14,2,0,Math.PI*2);ctx.fill();
+      }else if(ch==="V"){
+        ctx.fillStyle="#69d28f";ctx.beginPath();ctx.moveTo(px+7,py+16);ctx.lineTo(px+16,py+7);ctx.lineTo(px+25,py+16);ctx.closePath();ctx.fill();
+        ctx.fillStyle="#b5f3c9";ctx.fillRect(px+10,py+16,12,10);
+      }else if(ch==="T"){
+        ctx.fillStyle="#f6c453";ctx.beginPath();ctx.arc(px+16,py+16,10,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle="#fff2b8";ctx.lineWidth=2;ctx.beginPath();ctx.arc(px+16,py+16,5,0,Math.PI*2);ctx.stroke();
+      }else if(ch==="H"){
+        ctx.fillStyle="#62d39b";ctx.fillRect(px+12,py+9,8,17);ctx.fillStyle="#d9ffe8";ctx.fillRect(px+14,py+6,4,4);
+      }
+    }
+  }
+
+  // Monster stays at the exact tile where the encounter started.
+  if(enemy && enemyPos){
+    const ex=enemyPos.x*TILESIZE+16, ey=enemyPos.y*TILESIZE+16;
+    ctx.fillStyle="rgba(0,0,0,.32)";
+    ctx.beginPath();ctx.ellipse(ex,ey+9,11,4,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#e85d68";
+    ctx.beginPath();ctx.arc(ex,ey,11,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#fff";
+    ctx.beginPath();ctx.arc(ex-4,ey-3,2.5,0,Math.PI*2);ctx.arc(ex+4,ey-3,2.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#40131a";
+    ctx.fillRect(ex-5,ey+3,10,2);
+    ctx.fillStyle="#ffd166";
+    ctx.font="bold 11px system-ui";
+    ctx.textAlign="center";
+    ctx.fillText(enemy.name,ex,ey-17);
+    ctx.fillStyle="rgba(20,25,35,.85)";
+    ctx.fillRect(ex-14,ey-29,28,4);
+    ctx.fillStyle="#69d28f";
+    ctx.fillRect(ex-14,ey-29,28*Math.max(0,enemy.hp)/Math.max(1,enemy.maxHp||enemy.hp),4);
+  }
+
+  // Player with shadow and small direction marker
+  const px=player.x*TILESIZE+16, py=player.y*TILESIZE+16;
+  ctx.fillStyle="rgba(0,0,0,.3)";ctx.beginPath();ctx.ellipse(px,py+8,10,4,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#69b7ff";ctx.beginPath();ctx.arc(px,py,10,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#e8f5ff";ctx.beginPath();ctx.arc(px-3,py-3,3,0,Math.PI*2);ctx.fill();
+}
+
+function updateStats() {
+  statsElem.innerHTML =
+    `<span class="player">LEVEL ${player.lvl}</span> &nbsp;•&nbsp; ❤️ HP ${player.hp}/${player.maxHp} &nbsp;•&nbsp; ⭐ XP ${player.xp} &nbsp;•&nbsp; ⚔ ATK ${player.atk} &nbsp;•&nbsp; 🛡 DEF ${player.def} &nbsp;•&nbsp; 📍 <b>${currentMap}</b>`;
+}
+function updateInventory() {
+  inventoryElem.innerHTML = `🧪 Potions <strong>x${player.potions}</strong>`;
+}
+function log(msg) {
+  logElem.innerHTML += msg + "<br>";
+  logElem.scrollTop = logElem.scrollHeight;
+}
+function clearLog() {
+  logElem.innerHTML = "";
+}
+
+function canMove(x,y) {
+  if (x < 0 || x >= MAP_W || y < 0 || y >= MAP_H) return false;
+  let ch = getMap()[y][x];
+  return ch !== "#";
+}
+
+function move(dx,dy) {
+  if (gameState !== "explore") return;
+  let nx = player.x + dx, ny = player.y + dy;
+  if (!canMove(nx,ny)) return;
+  player.x = nx;
+  player.y = ny;
+  drawMap();
+  encounter();
+}
+
+function encounter() {
+  let map = getMap();
+  let ch = map[player.y][player.x];
+  // Map transitions
+  let tr = mapTransitions[currentMap];
+  if (tr && tr[player.y] && tr[player.y][player.x]) {
+    let t = tr[player.y][player.x];
+    setMap(t.to, t.x, t.y);
+    return;
+  }
+  // Special tiles
+  if (ch === "V") {
+    log(`<span class="player">You enter the village. Rest and trade!</span>`);
+    player.hp = player.maxHp;
+    player.potions += 1;
+    updateStats(); updateInventory();
+    getMap()[player.y] = replaceAt(getMap()[player.y], player.x, ".");
+    drawMap();
+    return;
+  }
+  if (ch === "T") {
+    log(`<span class="player">You find a teleport rune!</span>`);
+    let dest = (currentMap==='Overworld') ? 'Dungeon' : 'Overworld';
+    let coords = (dest==='Overworld') ? {x:12,y:10} : {x:1,y:1};
+    setTimeout(()=>{ setMap(dest,coords.x,coords.y); },600);
+    return;
+  }
+  if (ch === "H") {
+    log(`<span class="player">You found a hidden potion!</span>`);
+    player.potions++;
+    getMap()[player.y] = replaceAt(getMap()[player.y], player.x, ".");
+    updateInventory();
+    drawMap();
+    return;
+  }
+  if (ch === "E") {
+    getMap()[player.y] = replaceAt(getMap()[player.y], player.x, ".");
+    startBattle();
+    return;
+  }
+  // Random encounter chance
+  if (Math.random() < 0.07 && currentMap !== 'Village') {
+    startBattle();
+  }
+}
+
+function startBattle() {
+  enemy = JSON.parse(JSON.stringify(enemies[Math.floor(Math.random()*enemies.length)]));
+  enemy.maxHp = enemy.hp;
+  enemyPos = {x: player.x, y: player.y};
+  attackFx = 0;
+  gameState = "battle";
+  clearLog();
+  log(`<span class="enemy">⚔ ${enemy.name} is right here! (HP:${enemy.hp})</span>`);
+  drawMap();
+  showBattleControls();
+}
+
+function showBattleControls() {
+  controlsElem.innerHTML = `
+    <button onclick="attack()">Attack</button>
+    <button onclick="usePotion()">Use Potion</button>
+    <button onclick="runAway()">Run</button>
+  `;
+}
+function showExploreControls() {
+  controlsElem.innerHTML = `Use arrow keys/WASD to move.<br><button onclick="usePotion()">Use Potion</button>`;
+}
+function attack() {
+  if (gameState !== "battle") return;
+  let dmg = Math.max(0, player.atk - enemy.def + Math.floor(Math.random()*3));
+  enemy.hp -= dmg;
+  attackFx = 12;
+  drawMap();
+  log(`<span class="player">⚔ You attack ${enemy.name} for ${dmg} damage!</span>`);
+  if (enemy.hp <= 0) {
+    log(`<span class="enemy">${enemy.name} defeated!</span>`);
+    player.xp += enemy.xp;
+    checkLevelUp();
+    gameState = "explore";
+    enemyPos = null;
+    showExploreControls();
+    drawMap();
+    updateStats();
+    return;
+  }
+  setTimeout(enemyAttack, 800);
+}
+function enemyAttack() {
+  if (gameState !== "battle") return;
+  if (player.invincible) {
+    log(`<span class="enemy">${enemy.name} tries to hit you, but you're invincible!</span>`);
+    showBattleControls();
+    return;
+  }
+  let dmg = Math.max(0, enemy.atk - player.def + Math.floor(Math.random()*2));
+  player.hp -= dmg;
+  log(`<span class="enemy">${enemy.name} hits you for ${dmg}!</span>`);
+  updateStats();
+  if (player.hp <= 0) {
+    log(`<b>Game Over!</b>`);
+    controlsElem.innerHTML = `<button onclick="location.reload()">Restart</button>`;
+    gameState = "dead";
+    enemyPos = null;
+    drawMap();
+    return;
+  }
+  showBattleControls();
+}
+function usePotion() {
+  if (player.potions > 0 && player.hp < player.maxHp) {
+    player.potions--;
+    let heal = Math.min(player.maxHp - player.hp, 12);
+    player.hp += heal;
+    log(`<span class="player">You use a potion and heal ${heal} HP!</span>`);
+    updateStats();
+    updateInventory();
+    if (gameState === "battle") {
+      setTimeout(enemyAttack, 800);
+    }
+  } else {
+    log(`<span class="player">No potions left or already at full HP!</span>`);
+  }
+}
+function runAway() {
+  if (gameState !== "battle") return;
+  if (Math.random() < 0.6) {
+    log(`<span class="player">You escaped safely!</span>`);
+    gameState = "explore";
+    enemyPos = null;
+    showExploreControls();
+    drawMap();
+  } else {
+    log(`<span class="enemy">Failed to run!</span>`);
+    setTimeout(enemyAttack, 800);
+  }
+}
+function checkLevelUp() {
+  let needed = player.lvl*15;
+  while (player.xp >= needed) {
+    player.xp -= needed;
+    player.lvl++;
+    player.maxHp += 6;
+    player.hp = player.maxHp;
+    player.atk += 2;
+    player.def += 1;
+    player.potions += 1;
+    log(`<b>Level Up! You are now level ${player.lvl}!</b>`);
+    updateStats();
+    updateInventory();
+    needed = player.lvl*15;
+  }
+}
+function replaceAt(str, idx, ch) {
+  return str.substring(0, idx) + ch + str.substring(idx+1);
+}
+
+function handleKey(e) {
+  if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key)) e.preventDefault();
+  if (gameState !== "explore") return;
+  let key = e.key.toLowerCase();
+  if (key === "arrowup" || key === "w") move(0,-1);
+  else if (key === "arrowdown" || key === "s") move(0,1);
+  else if (key === "arrowleft" || key === "a") move(-1,0);
+  else if (key === "arrowright" || key === "d") move(1,0);
+  drawMap();
+}
+
+window.attack = attack;
+window.usePotion = usePotion;
+window.runAway = runAway;
+
+function startGame() {
+  enemy = null;
+  enemyPos = null;
+  // Find player start
+  let map = getMap();
+  for (let y=0;y<MAP_H;y++) {
+    for (let x=0;x<MAP_W;x++) {
+      if (map[y][x] === "P") {
+        player.x = x; player.y = y;
+        map[y] = replaceAt(map[y], x, ".");
+      }
+    }
+  }
+  drawMap();
+  updateStats();
+  updateInventory();
+  clearLog();
+  log("Welcome to Mini RPG with maps! Your quest begins...");
+  showExploreControls();
+}
+
+function gameLoop() {
+  update();
+  drawMap();
+  requestAnimationFrame(gameLoop);
+}
+
+// Admin Panel logic
+function openAdmin() {
+  overlay.style.display = "block";
+  adminPanel.style.display = "block";
+  // Populate maps
+  let sel = document.getElementById('mapSelect');
+  sel.innerHTML = "";
+  for (let k in maps) {
+    let opt = document.createElement('option');
+    opt.value = k; opt.text = k;
+    if (k===currentMap) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  document.getElementById('tpX').value = player.x;
+  document.getElementById('tpY').value = player.y;
+  document.getElementById('adminInvincible').checked = player.invincible;
+  updateAdminStats();
+}
+function closeAdmin() {
+  overlay.style.display = "none";
+  adminPanel.style.display = "none";
+}
+function adminHeal() {
+  player.hp = player.maxHp;
+  updateStats();
+  updateAdminStats();
+}
+function adminGivePotions() {
+  let n = parseInt(document.getElementById('givePotions').value);
+  if (isNaN(n) || n < 1) n=1;
+  player.potions += n;
+  updateInventory();
+  updateAdminStats();
+}
+function adminTeleport() {
+  let map = document.getElementById('mapSelect').value;
+  let x = parseInt(document.getElementById('tpX').value);
+  let y = parseInt(document.getElementById('tpY').value);
+  if (maps[map] && x >=0 && y >=0 && x<MAP_W && y<MAP_H && maps[map][y][x] !== "#") {
+    setMap(map, x, y);
+    closeAdmin();
+  }
+}
+function adminToggleInvincible() {
+  player.invincible = document.getElementById('adminInvincible').checked;
+  updateAdminStats();
+}
+function updateAdminStats() {
+  document.getElementById('stat_hp').value = player.hp;
+  document.getElementById('stat_maxhp').value = player.maxHp;
+  document.getElementById('stat_xp').value = player.xp;
+  document.getElementById('stat_lvl').value = player.lvl;
+  document.getElementById('stat_atk').value = player.atk;
+  document.getElementById('stat_def').value = player.def;
+  document.getElementById('stat_potions').value = player.potions;
+  adminStats.innerHTML = `
+    <b>Player:</b> (${player.x},${player.y}) on <b>${currentMap}</b><br>
+    HP: ${player.hp}/${player.maxHp}<br>
+    XP: ${player.xp} | LVL: ${player.lvl}<br>
+    ATK: ${player.atk} | DEF: ${player.def}<br>
+    Potions: ${player.potions}<br>
+    Invincible: ${player.invincible ? "Yes":"No"}
+  `;
+}
+function applyStats() {
+  player.hp = parseInt(document.getElementById('stat_hp').value) || player.hp;
+  player.maxHp = parseInt(document.getElementById('stat_maxhp').value) || player.maxHp;
+  if (player.hp > player.maxHp) player.hp = player.maxHp;
+  player.xp = parseInt(document.getElementById('stat_xp').value) || player.xp;
+  player.lvl = parseInt(document.getElementById('stat_lvl').value) || player.lvl;
+  player.atk = parseInt(document.getElementById('stat_atk').value) || player.atk;
+  player.def = parseInt(document.getElementById('stat_def').value) || player.def;
+  player.potions = parseInt(document.getElementById('stat_potions').value) || player.potions;
+  updateStats();
+  updateInventory();
+  updateAdminStats();
+}
+
+// Hotkey for admin panel (press "Q")
+document.addEventListener("keydown", function(e) {
+  if (e.key === "q" && !adminPanel.style.display.match(/block/)) openAdmin();
+  else handleKey(e);
+});
+
+startGame();
+</script>
+</body>
+</html>
+
+Features:

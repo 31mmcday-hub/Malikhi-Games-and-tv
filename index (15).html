@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini RPG with Maps & Admin Panel</title>
+  <style>
+    body { background: #222; color: #fff; font-family: monospace; }
+    #game { margin: 30px auto; width: 540px; }
+    #screen { width: 512px; height: 512px; background: #111; border: 4px solid #fff; }
+    #ui { margin-top: 10px; padding: 10px; background: #333; border-radius: 5px; }
+    #log { height: 80px; overflow-y: auto; background: #222; color: #9f9; padding: 5px; font-size: 14px; }
+    #stats { margin: 10px 0; }
+    #inventory { margin: 10px 0; }
+    button { background: #444; color: #fff; border: none; border-radius: 3px; padding: 5px 10px; margin-right: 5px; cursor: pointer; }
+    button:hover { background: #666; }
+    .enemy { color: #f66; }
+    .player { color: #6cf; }
+    #adminBtn { float: right; background: orange; color:#333; }
+    #adminPanel {
+      display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: #111; border: 3px solid #fa0; z-index: 10; padding: 20px; border-radius: 10px; width: 350px;
+      box-shadow: 0 0 30px #000a;
+    }
+    #adminPanel label { margin-top: 8px; display: block; }
+    #adminPanel input, #adminPanel select { margin-top: 2px; width: 90%; }
+    #adminPanel button { margin: 6px 2px 0 0; }
+    #adminPanelClose { float: right; }
+    #overlay {
+      display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; background: #000a; z-index:9;
+    }
+  </style>
+</head>
+<body>
+<div id="game">
+  <canvas id="screen" width="512" height="512"></canvas>
+  <div id="ui">
+    <button id="adminBtn" onclick="openAdmin()">Admin Panel</button>
+    <div id="stats"></div>
+    <div id="inventory"></div>
+    <div id="log"></div>
+    <div id="controls"></div>
+  </div>
+</div>
+<div id="overlay"></div>
+<div id="adminPanel">
+  <button id="adminPanelClose" onclick="closeAdmin()">X</button>
+  <h3>Admin Panel</h3>
+  <div id="adminStats"></div>
+  <label>Heal to Max:
+    <button onclick="adminHeal()">Heal</button>
+  </label>
+  <label>Give Potions:
+    <input type="number" id="givePotions" value="1" min="1" max="99">
+    <button onclick="adminGivePotions()">Give</button>
+  </label>
+  <label>Teleport:
+    <select id="mapSelect"></select>
+    X: <input type="number" id="tpX" value="1" min="0" max="15" style="width:30px">
+    Y: <input type="number" id="tpY" value="1" min="0" max="15" style="width:30px">
+    <button onclick="adminTeleport()">Go</button>
+  </label>
+  <label>
+    <input type="checkbox" id="adminInvincible" onchange="adminToggleInvincible()"> Invincible
+  </label>
+</div>
+<script>
+const TILESIZE = 32, MAP_W = 16, MAP_H = 16;
+const maps = {
+  'Overworld': [
+    "################",
+    "#..............#",
+    "#..####........#",
+    "#..#..#.....E..#",
+    "#..#..#........#",
+    "#..####........#",
+    "#.....V..#######",
+    "#...E..........#",
+    "#######........#",
+    "#..............#",
+    "#....E.....T...#",
+    "#..............#",
+    "#........#######",
+    "#..............#",
+    "#P.............#",
+    "################"
+  ],
+  'Village': [
+    "################",
+    "#..............#",
+    "#...H..H.......#",
+    "#..H....H......#",
+    "#..............#",
+    "#......H.......#",
+    "#...H..#######.#",
+    "#..............#",
+    "###.#####......#",
+    "#.......H......#",
+    "#....E.........#",
+    "#..............#",
+    "#........#######",
+    "#.....T........#",
+    "#......H.......#",
+    "################"
+  ],
+  'Dungeon': [
+    "################",
+    "#..E......E....#",
+    "#..####........#",
+    "#..#..#.....E..#",
+    "#..#..#........#",
+    "#..####........#",
+    "#........#######",
+    "#...E..........#",
+    "#######........#",
+    "#..............#",
+    "#....E.........#",
+    "#..............#",
+    "#........#######",
+    "#......T.......#",
+    "#...E..........#",
+    "################"
+  ]
+};
+
+const mapTransitions = {
+  // [map][y][x] = {toMap, toX, toY}
+  'Overworld': { 6: {6: {to:'Village',x:1,y:14}}, 10: {12:{to:'Dungeon',x:1,y:1}} },
+  'Village': { 13: {6:{to:'Overworld',x:6,y:6}} },
+  'Dungeon': { 13: {6:{to:'Overworld',x:12,y:10}} }
+};
+
+let currentMap = 'Overworld';
+
+const player = {
+  x: 1, y: 14,
+  hp: 20, maxHp: 20,
+  xp: 0, lvl: 1,
+  atk: 4, def: 2,
+  potions: 2,
+  invincible: false
+};
+
+const enemies = [
+  {name:"Slime", hp:10, atk:3, def:1, xp:5},
+  {name:"Goblin", hp:14, atk:4, def:2, xp:8},
+  {name:"Wolf", hp:12, atk:5, def:1, xp:7},
+  {name:"Orc", hp:18, atk:6, def:3, xp:12}
+];
+
+let gameState = "explore"; // or "battle" or "dialog"
+let enemy = null;
+
+const canvas = document.getElementById("screen");
+const ctx = canvas.getContext("2d");
+const logElem = document.getElementById("log");
+const statsElem = document.getElementById("stats");
+const inventoryElem = document.getElementById("inventory");
+const controlsElem = document.getElementById("controls");
+const adminPanel = document.getElementById("adminPanel");
+const overlay = document.getElementById("overlay");
+const adminStats = document.getElementById("adminStats");
+
+function getMap() {
+  return maps[currentMap];
+}
+function setMap(name, x, y) {
+  currentMap = name;
+  player.x = x;
+  player.y = y;
+  drawMap();
+  updateStats();
+  updateInventory();
+  showExploreControls();
+  log(`<span class="player">You travel to ${name}!</span>`);
+}
+
+function drawMap() {
+  ctx.clearRect(0,0,512,512);
+  let map = getMap();
+  for(let y=0;y<MAP_H;y++) {
+    for(let x=0;x<MAP_W;x++) {
+      let ch = map[y][x];
+      if (ch==="#") {
+        ctx.fillStyle="#444";
+        ctx.fillRect(x*TILESIZE,y*TILESIZE,TILESIZE,TILESIZE);
+      } else if (ch==="E") {
+        ctx.fillStyle="#f66";
+        ctx.fillRect(x*TILESIZE,y*TILESIZE,TILESIZE,TILESIZE);
+      } else if (ch==="V") {
+        ctx.fillStyle="#af5";
+        ctx.fillRect(x*TILESIZE,y*TILESIZE,TILESIZE,TILESIZE);
+      } else if (ch==="T") {
+        ctx.fillStyle="#fa0";
+        ctx.fillRect(x*TILESIZE,y*TILESIZE,TILESIZE,TILESIZE);
+      } else if (ch==="H") {
+        ctx.fillStyle="#6fa";
+        ctx.fillRect(x*TILESIZE,y*TILESIZE,TILESIZE,TILESIZE);
+      } else {
+        ctx.fillStyle="#222";
+        ctx.fillRect(x*TILESIZE,y*TILESIZE,TILESIZE,TILESIZE);
+      }
+    }
+  }
+  // Draw player
+  ctx.fillStyle="#6cf";
+  ctx.fillRect(player.x*TILESIZE+8,player.y*TILESIZE+8,16,16);
+}
+
+function updateStats() {
+  statsElem.innerHTML =
+    `<span class="player">LVL ${player.lvl}</span> | HP: ${player.hp}/${player.maxHp} | XP: ${player.xp} | ATK: ${player.atk} | DEF: ${player.def} | <b>${currentMap}</b>`;
+}
+function updateInventory() {
+  inventoryElem.innerHTML = `Inventory: Potion x${player.potions}`;
+}
+function log(msg) {
+  logElem.innerHTML += msg + "<br>";
+  logElem.scrollTop = logElem.scrollHeight;
+}
+function clearLog() {
+  logElem.innerHTML = "";
+}
+
+function canMove(x,y) {
+  if (x < 0 || x >= MAP_W || y < 0 || y >= MAP_H) return false;
+  let ch = getMap()[y][x];
+  return ch !== "#";
+}
+
+function move(dx,dy) {
+  if (gameState !== "explore") return;
+  let nx = player.x + dx, ny = player.y + dy;
+  if (!canMove(nx,ny)) return;
+  player.x = nx;
+  player.y = ny;
+  drawMap();
+  encounter();
+}
+
+function encounter() {
+  let map = getMap();
+  let ch = map[player.y][player.x];
+  // Map transitions
+  let tr = mapTransitions[currentMap];
+  if (tr && tr[player.y] && tr[player.y][player.x]) {
+    let t = tr[player.y][player.x];
+    setMap(t.to, t.x, t.y);
+    return;
+  }
+  // Special tiles
+  if (ch === "V") {
+    log(`<span class="player">You enter the village. Rest and trade!</span>`);
+    player.hp = player.maxHp;
+    player.potions += 1;
+    updateStats(); updateInventory();
+    getMap()[player.y] = replaceAt(getMap()[player.y], player.x, ".");
+    drawMap();
+    return;
+  }
+  if (ch === "T") {
+    log(`<span class="player">You find a teleport rune!</span>`);
+    let dest = (currentMap==='Overworld') ? 'Dungeon' : 'Overworld';
+    let coords = (dest==='Overworld') ? {x:12,y:10} : {x:1,y:1};
+    setTimeout(()=>{ setMap(dest,coords.x,coords.y); },600);
+    return;
+  }
+  if (ch === "H") {
+    log(`<span class="player">You found a hidden potion!</span>`);
+    player.potions++;
+    getMap()[player.y] = replaceAt(getMap()[player.y], player.x, ".");
+    updateInventory();
+    drawMap();
+    return;
+  }
+  if (ch === "E") {
+    getMap()[player.y] = replaceAt(getMap()[player.y], player.x, ".");
+    startBattle();
+    return;
+  }
+  // Random encounter chance
+  if (Math.random() < 0.07 && currentMap !== 'Village') {
+    startBattle();
+  }
+}
+
+function startBattle() {
+  enemy = JSON.parse(JSON.stringify(enemies[Math.floor(Math.random()*enemies.length)]));
+  gameState = "battle";
+  clearLog();
+  log(`<span class="enemy">${enemy.name} appears! (HP:${enemy.hp})</span>`);
+  showBattleControls();
+}
+
+function showBattleControls() {
+  controlsElem.innerHTML = `
+    <button onclick="attack()">Attack</button>
+    <button onclick="usePotion()">Use Potion</button>
+    <button onclick="runAway()">Run</button>
+  `;
+}
+function showExploreControls() {
+  controlsElem.innerHTML = `Use arrow keys/WASD to move.<br><button onclick="usePotion()">Use Potion</button>`;
+}
+function attack() {
+  if (gameState !== "battle") return;
+  let dmg = Math.max(0, player.atk - enemy.def + Math.floor(Math.random()*3));
+  enemy.hp -= dmg;
+  log(`<span class="player">You attack for ${dmg}!</span>`);
+  if (enemy.hp <= 0) {
+    log(`<span class="enemy">${enemy.name} defeated!</span>`);
+    player.xp += enemy.xp;
+    checkLevelUp();
+    gameState = "explore";
+    showExploreControls();
+    drawMap();
+    updateStats();
+    return;
+  }
+  setTimeout(enemyAttack, 800);
+}
+function enemyAttack() {
+  if (gameState !== "battle") return;
+  if (player.invincible) {
+    log(`<span class="enemy">${enemy.name} tries to hit you, but you're invincible!</span>`);
+    showBattleControls();
+    return;
+  }
+  let dmg = Math.max(0, enemy.atk - player.def + Math.floor(Math.random()*2));
+  player.hp -= dmg;
+  log(`<span class="enemy">${enemy.name} hits you for ${dmg}!</span>`);
+  updateStats();
+  if (player.hp <= 0) {
+    log(`<b>Game Over!</b>`);
+    controlsElem.innerHTML = `<button onclick="location.reload()">Restart</button>`;
+    gameState = "dead";
+    return;
+  }
+  showBattleControls();
+}
+function usePotion() {
+  if (player.potions > 0 && player.hp < player.maxHp) {
+    player.potions--;
+    let heal = Math.min(player.maxHp - player.hp, 12);
+    player.hp += heal;
+    log(`<span class="player">You use a potion and heal ${heal} HP!</span>`);
+    updateStats();
+    updateInventory();
+    if (gameState === "battle") {
+      setTimeout(enemyAttack, 800);
+    }
+  } else {
+    log(`<span class="player">No potions left or already at full HP!</span>`);
+  }
+}
+function runAway() {
+  if (gameState !== "battle") return;
+  if (Math.random() < 0.6) {
+    log(`<span class="player">You escaped safely!</span>`);
+    gameState = "explore";
+    showExploreControls();
+    drawMap();
+  } else {
+    log(`<span class="enemy">Failed to run!</span>`);
+    setTimeout(enemyAttack, 800);
+  }
+}
+function checkLevelUp() {
+  let needed = player.lvl*15;
+  while (player.xp >= needed) {
+    player.xp -= needed;
+    player.lvl++;
+    player.maxHp += 6;
+    player.hp = player.maxHp;
+    player.atk += 2;
+    player.def += 1;
+    player.potions += 1;
+    log(`<b>Level Up! You are now level ${player.lvl}!</b>`);
+    updateStats();
+    updateInventory();
+    needed = player.lvl*15;
+  }
+}
+function replaceAt(str, idx, ch) {
+  return str.substring(0, idx) + ch + str.substring(idx+1);
+}
+
+function handleKey(e) {
+  if (gameState !== "explore") return;
+  let key = e.key.toLowerCase();
+  if (key === "arrowup" || key === "w") move(0,-1);
+  else if (key === "arrowdown" || key === "s") move(0,1);
+  else if (key === "arrowleft" || key === "a") move(-1,0);
+  else if (key === "arrowright" || key === "d") move(1,0);
+  drawMap();
+}
+
+window.attack = attack;
+window.usePotion = usePotion;
+window.runAway = runAway;
+
+function startGame() {
+  // Find player start
+  let map = getMap();
+  for (let y=0;y<MAP_H;y++) {
+    for (let x=0;x<MAP_W;x++) {
+      if (map[y][x] === "P") {
+        player.x = x; player.y = y;
+        map[y] = replaceAt(map[y], x, ".");
+      }
+    }
+  }
+  drawMap();
+  updateStats();
+  updateInventory();
+  clearLog();
+  log("Welcome to Mini RPG with maps! Your quest begins...");
+  showExploreControls();
+}
+
+// Admin Panel logic
+function openAdmin() {
+  overlay.style.display = "block";
+  adminPanel.style.display = "block";
+  // Populate maps
+  let sel = document.getElementById('mapSelect');
+  sel.innerHTML = "";
+  for (let k in maps) {
+    let opt = document.createElement('option');
+    opt.value = k; opt.text = k;
+    if (k===currentMap) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  document.getElementById('tpX').value = player.x;
+  document.getElementById('tpY').value = player.y;
+  document.getElementById('adminInvincible').checked = player.invincible;
+  updateAdminStats();
+}
+function closeAdmin() {
+  overlay.style.display = "none";
+  adminPanel.style.display = "none";
+}
+function adminHeal() {
+  player.hp = player.maxHp;
+  updateStats();
+  updateAdminStats();
+}
+function adminGivePotions() {
+  let n = parseInt(document.getElementById('givePotions').value);
+  if (isNaN(n) || n < 1) n=1;
+  player.potions += n;
+  updateInventory();
+  updateAdminStats();
+}
+function adminTeleport() {
+  let map = document.getElementById('mapSelect').value;
+  let x = parseInt(document.getElementById('tpX').value);
+  let y = parseInt(document.getElementById('tpY').value);
+  if (maps[map] && x >=0 && y >=0 && x<MAP_W && y<MAP_H && maps[map][y][x] !== "#") {
+    setMap(map, x, y);
+    closeAdmin();
+  }
+}
+function adminToggleInvincible() {
+  player.invincible = document.getElementById('adminInvincible').checked;
+  updateAdminStats();
+}
+function updateAdminStats() {
+  adminStats.innerHTML = `
+    <b>Player:</b> (${player.x},${player.y}) on <b>${currentMap}</b><br>
+    HP: ${player.hp}/${player.maxHp}<br>
+    XP: ${player.xp} | LVL: ${player.lvl}<br>
+    ATK: ${player.atk} | DEF: ${player.def}<br>
+    Potions: ${player.potions}<br>
+    Invincible: ${player.invincible ? "Yes":"No"}
+  `;
+}
+
+// Hotkey for admin panel (press "Q")
+document.addEventListener("keydown", function(e) {
+  if (e.key === "q" && !adminPanel.style.display.match(/block/)) openAdmin();
+  else handleKey(e);
+});
+
+startGame();
+</script>
+</body>
+</html>

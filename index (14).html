@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Archery Game</title>
+  <style>
+    body { background: #282C34; color: #fff; font-family: Arial, sans-serif; text-align: center; }
+    canvas { background: #f9f9f9; display: block; margin: 20px auto; border: 3px solid #5C6370; }
+    h1 { color: #E06C75; }
+    #score { margin: 10px 0; font-size: 1.1em; }
+    button { margin-top: 10px; padding: 7px 18px; border-radius: 6px; border: none; background: #E06C75; color: #fff; font-size: 1em; cursor: pointer; }
+    button:hover { background: #be5046; }
+  </style>
+</head>
+<body>
+  <h1>Archery Mini-Game</h1>
+  <div id="score">Score: <span id="scoreNum">0</span></div>
+  <canvas id="archeryCanvas" width="600" height="400"></canvas>
+  <br>
+  <button onclick="resetGame()">Restart</button>
+  <script>
+    const canvas = document.getElementById('archeryCanvas');
+    const ctx = canvas.getContext('2d');
+    let arrows = [];
+    let score = 0;
+    let shooting = false;
+    let arrow = null;
+    const bowX = 70, bowY = canvas.height/2;
+    const targetX = 530, targetY = canvas.height/2, targetR = 50;
+function drawTarget() {
+  // Draw target (concentric circles)
+  const colors = ['#E06C75', '#fadb7f', '#61afef', '#fff'];
+  for(let i=0; i<colors.length; i++) {
+    ctx.beginPath();
+    ctx.arc(targetX, targetY, targetR - i*targetR/4, 0, 2*Math.PI);
+    ctx.fillStyle = colors[i];
+    ctx.fill();
+  }
+}
+
+function drawBow() {
+  ctx.save();
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.arc(bowX, bowY, 40, Math.PI/2, Math.PI*1.5);
+  ctx.stroke();
+  ctx.restore();
+  // Draw the string
+  ctx.save();
+  ctx.strokeStyle = '#888';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(bowX, bowY - 40);
+  ctx.lineTo(bowX, bowY + 40);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawArrow(arrow) {
+  ctx.save();
+  ctx.translate(arrow.x, arrow.y);
+  ctx.rotate(arrow.angle);
+  ctx.fillStyle = '#444';
+  ctx.fillRect(-15, -2, 30, 4);
+  ctx.fillStyle = '#E06C75';
+  ctx.beginPath();
+  ctx.moveTo(15, 0);
+  ctx.lineTo(23, 4);
+  ctx.lineTo(23, -4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawTarget();
+  drawBow();
+  arrows.forEach(drawArrow);
+  if (arrow) drawArrow(arrow);
+}
+
+function shootArrow(power, angle) {
+  arrows.push({
+    x: bowX + 30 * Math.cos(angle),
+    y: bowY + 30 * Math.sin(angle),
+    vx: power * Math.cos(angle),
+    vy: power * Math.sin(angle),
+    angle: angle
+  });
+}
+
+function updateArrows() {
+  arrows.forEach((a, idx) => {
+    a.x += a.vx;
+    a.y += a.vy;
+    a.vy += 0.15; // gravity
+    a.angle = Math.atan2(a.vy, a.vx);
+    // Hit detection
+    const dx = a.x - targetX;
+    const dy = a.y - targetY;
+    if (Math.sqrt(dx*dx + dy*dy) < targetR) {
+      // Score based on distance from center
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      let pts = 0;
+      if (dist < targetR/4) pts = 100; // Bullseye!
+      else if (dist < targetR/2) pts = 25;
+      else if (dist < 3*targetR/4) pts = 10;
+      else pts = 5;
+      score += pts;
+      document.getElementById('scoreNum').textContent = score;
+      arrows.splice(idx, 1);
+    }
+    // Out of bounds
+    else if (a.x > canvas.width || a.y > canvas.height || a.y < 0) {
+      arrows.splice(idx, 1);
+    }
+  });
+}
+
+// Mouse controls: click and drag to aim and set power
+let dragStart = null;
+canvas.addEventListener('mousedown', e => {
+  if (shooting) return;
+  const rect = canvas.getBoundingClientRect();
+  dragStart = {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top
+  };
+  arrow = {
+    x: bowX,
+    y: bowY,
+    angle: 0
+  };
+});
+canvas.addEventListener('mousemove', e => {
+  if (!dragStart) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const dx = dragStart.x - mx;
+  const dy = dragStart.y - my;
+  let angle = Math.atan2(dy, dx);
+  let dist = Math.min(Math.sqrt(dx*dx + dy*dy), 100);
+  arrow.angle = angle;
+  arrow.x = bowX + dist * Math.cos(angle);
+  arrow.y = bowY + dist * Math.sin(angle);
+  draw();
+});
+canvas.addEventListener('mouseup', e => {
+  if (!dragStart) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const dx = dragStart.x - mx;
+  const dy = dragStart.y - my;
+  let angle = Math.atan2(dy, dx);
+  let power = Math.min(Math.sqrt(dx*dx + dy*dy)/7, 10); // Limit power
+  shootArrow(power, angle);
+  dragStart = null;
+  arrow = null;
+});
+
+function gameLoop() {
+  updateArrows();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+function resetGame() {
+  arrows = [];
+  score = 0;
+  document.getElementById('scoreNum').textContent = 0;
+  arrow = null;
+  draw();
+}
+
+// Initialize
+draw();
+gameLoop();
+
+  </script>
+</body>
+</html>
