@@ -19,7 +19,7 @@ const games = [
   {id:"sokoban",name:"Sokoban",desc:"Push the boxes",emoji:"📦",url:"sokoban.html"},
   {id:"tetris",name:"Tetris",desc:"Block-stacking classic",emoji:"🧱",url:"tetris.html"},
   {id:"typing",name:"Typing Race",desc:"Test your typing speed",emoji:"⌨️",url:"typing.html"},
-[{id:"driving",name:"Driving Game",desc:"Dodge traffic and beat your high score",emoji:"🏎️",url:"driving-game.html"},
+{id:"driving",name:"Driving Game",desc:"Dodge traffic and beat your high score",emoji:"🏎️",url:"driving-game.html"},
   {id:"chess",name:"Chess",desc:"Play chess online",emoji:"♟️",url:"https://www.chess.com/play/online"},
   {id:"agar",name:"Agar.io",desc:"Grow and survive",emoji:"🟢",url:"https://agar.io/"},
   {id:"krunker",name:"Krunker",desc:"Browser FPS",emoji:"🎯",url:"https://krunker.io/"},
