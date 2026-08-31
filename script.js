@@ -325,3 +325,4 @@ if (savedDark === "0") {
 
 render();
 renderFav();
+const games = [{id:"driving",name:"Driving Game",desc:"Dodge traffic and beat your high score",emoji:"🏎️",url:"driving-game.html"},
