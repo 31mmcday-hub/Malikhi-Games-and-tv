@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Driving Game with Real Car Sprite</title>
+  <style>
+    body { background: #222; text-align: center; }
+    #gameCanvas {
+      background: #444;
+      display: block;
+      margin: 30px auto;
+      border: 2px solid #fff;
+    }
+    #scoreboard {
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0 0 10px 0;
+    }
+    #gameOver {
+      position: absolute;
+      left: 0; right: 0; top: 260px;
+      font-size: 2em;
+      color: #ff4444;
+      display: none;
+      font-family: Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div id="scoreboard">
+    <span id="score">Score: 0</span> | <span id="highScore">High Score: 0</span>
+  </div>
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
+  <div id="gameOver">GAME OVER!<br>Press R to Restart</div>
+  <script>
+    // Car sprite URLs (feel free to replace with your own images)
+    const PLAYER_CAR_SRC = 'https://opengameart.org/sites/default/files/car_blue_small_0.png';
+    const OBSTACLE_CAR_SRC = 'https://opengameart.org/sites/default/files/car_red_small_0.png';
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreboard = document.getElementById('score');
+    const highScoreboard = document.getElementById('highScore');
+    const gameOverDiv = document.getElementById('gameOver');
+    const WIDTH = 400, HEIGHT = 600;
+    const ROAD_X = 60, ROAD_WIDTH = 280;
+    const CAR_WIDTH = 50, CAR_HEIGHT = 100;
+    const OBSTACLE_WIDTH = 50, OBSTACLE_HEIGHT = 100;
+    const LANE_COUNT = 3;
+    const LANE_WIDTH = ROAD_WIDTH / LANE_COUNT;
+    let lanes = Array.from({length: LANE_COUNT}, (_, i) => ROAD_X + i * LANE_WIDTH + (LANE_WIDTH - CAR_WIDTH) / 2);
+
+    // Load car images
+    const playerCarImage = new Image();
+    playerCarImage.src = PLAYER_CAR_SRC;
+    const obstacleCarImage = new Image();
+    obstacleCarImage.src = OBSTACLE_CAR_SRC;
+
+    // Game state
+    let car = { x: lanes[1], y: HEIGHT - CAR_HEIGHT - 30, speed: 0, maxSpeed: 8 };
+    let obstacles = [];
+    let score = 0;
+    let highScore = parseInt(localStorage.getItem('carHighScore') || '0', 10);
+    let keys = {};
+    let gameOver = false;
+
+    function drawRoad() {
+      ctx.fillStyle = '#888';
+      ctx.fillRect(ROAD_X, 0, ROAD_WIDTH, HEIGHT);
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(ROAD_X, 0, ROAD_WIDTH, HEIGHT);
+
+      // Lane markers
+      ctx.strokeStyle = '#fff';
+      ctx.setLineDash([20, 20]);
+      for (let i = 1; i < LANE_COUNT; i++) {
+        let x = ROAD_X + i * LANE_WIDTH;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, HEIGHT);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+    }
+
+    function drawCar(obj, image) {
+      ctx.save();
+      ctx.drawImage(image, obj.x, obj.y, CAR_WIDTH, CAR_HEIGHT);
+      ctx.restore();
+    }
+
+    function resetGame() {
+      car.x = lanes[1];
+      car.y = HEIGHT - CAR_HEIGHT - 30;
+      car.speed = 0;
+      obstacles = [];
+      score = 0;
+      gameOver = false;
+      gameOverDiv.style.display = 'none';
+    }
+
+    function spawnObstacle() {
+      let lane = lanes[Math.floor(Math.random() * lanes.length)];
+      obstacles.push({x: lane, y: -OBSTACLE_HEIGHT, passed: false});
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      // Acceleration and braking
+      if (keys['ArrowUp']) {
+        car.speed = Math.min(car.speed + 0.15, car.maxSpeed);
+      } else if (keys['ArrowDown']) {
+        car.speed = Math.max(car.speed - 0.25, 0);
+      } else {
+        car.speed = Math.max(car.speed - 0.08, 2.5);
+      }
+
+      // Steering
+      if (keys['ArrowLeft'] && car.x > ROAD_X) {
+        car.x -= 6;
+      }
+      if (keys['ArrowRight'] && car.x < ROAD_X + ROAD_WIDTH - CAR_WIDTH) {
+        car.x += 6;
+      }
+
+      // Move obstacles
+      for (let obs of obstacles) {
+        obs.y += 4 + car.speed / 2;
+      }
+      // Remove passed obstacles and update score
+      obstacles = obstacles.filter(obs => obs.y < HEIGHT + OBSTACLE_HEIGHT);
+      for (let obs of obstacles) {
+        if (!obs.passed && obs.y > car.y + CAR_HEIGHT) {
+          obs.passed = true;
+          score += 10;
+        }
+      }
+
+      // Collision detection
+      for (let obs of obstacles) {
+        if (
+          car.x < obs.x + OBSTACLE_WIDTH &&
+          car.x + CAR_WIDTH > obs.x &&
+          car.y < obs.y + OBSTACLE_HEIGHT &&
+          car.y + CAR_HEIGHT > obs.y
+        ) {
+          gameOver = true;
+          gameOverDiv.style.display = 'block';
+          highScore = Math.max(highScore, score);
+          localStorage.setItem('carHighScore', highScore);
+          break;
+        }
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, WIDTH, HEIGHT);
+      drawRoad();
+
+      // Draw player car (only if image loaded)
+      if (playerCarImage.complete) {
+        drawCar(car, playerCarImage);
+      } else {
+        // fallback to rectangle if image not loaded yet
+        ctx.fillStyle = '#0cf';
+        ctx.fillRect(car.x, car.y, CAR_WIDTH, CAR_HEIGHT);
+      }
+
+      // Draw obstacles
+      for (let obs of obstacles) {
+        if (obstacleCarImage.complete) {
+          drawCar(obs, obstacleCarImage);
+        } else {
+          ctx.fillStyle = '#d33';
+          ctx.fillRect(obs.x, obs.y, OBSTACLE_WIDTH, OBSTACLE_HEIGHT);
+        }
+      }
+    }
+
+    function loop() {
+      if (!gameOver) {
+        update();
+      }
+      draw();
+      scoreboard.textContent = 'Score: ' + score;
+      highScoreboard.textContent = 'High Score: ' + highScore;
+    }
+
+    // Obstacle spawn timer
+    setInterval(() => {
+      if (!gameOver) spawnObstacle();
+    }, 1100);
+
+    // Main game loop
+    setInterval(loop, 1000 / 60);
+
+    // Keyboard controls
+    window.addEventListener('keydown', e => {
+      keys[e.key] = true;
+      if (gameOver && e.key === 'r') {
+        resetGame();
+      }
+    });
+    window.addEventListener('keyup', e => {
+      keys[e.key] = false;
+    });
+
+    // Initial draw to display high score at start
+    draw();
+    highScoreboard.textContent = 'High Score: ' + highScore;
+  </script>
+</body>
+</html>
