@@ -1,96 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Malikhi Games</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <header class="topbar">
-    <button id="menuBtn" class="icon-btn">☰</button>
-    <div class="logo">MALIKHI<span> GAMES</span></div>
-    <div class="search-wrap">
-      <input id="search" type="search" placeholder="Search games..." aria-label="Search games">
-    </div>
-    <button id="themeBtn" class="icon-btn" title="Toggle theme">☀</button>
-  </header>
-
-  <aside id="sidebar" class="sidebar">
-    <nav>
-      <button class="nav-item active" data-section="games">🎮 <span>Games</span></button>
-      <button class="nav-item" data-section="movies">🎬 <span>Movies & TV</span></button>
-      <button class="nav-item" data-section="anime">🍥 <span>Anime</span></button>
-      <button class="nav-item" data-section="music">🎵 <span>Music</span></button>
-      <button class="nav-item" data-section="favorites">⭐ <span>Favorites</span></button>
-    </nav>
-    <div class="side-bottom">
-      <button class="nav-item" data-section="settings">⚙️ <span>Settings</span></button>
-    </div>
-  </aside>
-
-  <main class="main">
-    <section id="games" class="section active-section">
-      <div class="hero">
-        <div>
-          <p class="eyebrow">WELCOME TO</p>
-          <h1>Malikhi Games</h1>
-          <p>Your clean little hub for games, entertainment, anime, and music.</p>
-        </div>
-        <button id="randomBtn" class="primary">🎲 Random Game</button>
-      </div>
-
-      <div class="section-head">
-        <h2>Featured Games</h2>
-        <span id="count"></span>
-      </div>
-      <div id="gameGrid" class="game-grid"></div>
-      <p id="empty" class="empty hidden">No games found. Try another search.</p>
-    </section>
-
-    <section id="movies" class="section">
-      <div class="page-title"><p class="eyebrow">WATCH</p><h1>Movies & TV</h1></div>
-      <div class="link-grid">
-        <a class="link-card" href="https://www.netflix.com/" target="_blank" rel="noopener"><b>Netflix</b><span>Official site ↗</span></a>
-        <a class="link-card" href="https://www.hulu.com/" target="_blank" rel="noopener"><b>Hulu</b><span>Official site ↗</span></a>
-        <a class="link-card" href="https://www.disneyplus.com/" target="_blank" rel="noopener"><b>Disney+</b><span>Official site ↗</span></a>
-        <a class="link-card" href="https://www.max.com/" target="_blank" rel="noopener"><b>Max</b><span>Official site ↗</span></a>
-      </div>
-    </section>
-
-    <section id="anime" class="section">
-      <div class="page-title"><p class="eyebrow">WATCH</p><h1>Anime</h1></div>
-      <div class="link-grid">
-        <a class="link-card" href="https://www.crunchyroll.com/" target="_blank" rel="noopener"><b>Crunchyroll</b><span>Official site ↗</span></a>
-        <a class="link-card" href="https://www.hidive.com/" target="_blank" rel="noopener"><b>HIDIVE</b><span>Official site ↗</span></a>
-      </div>
-    </section>
-
-    <section id="music" class="section">
-      <div class="page-title"><p class="eyebrow">LISTEN</p><h1>Music</h1></div>
-      <div class="link-grid">
-        <a class="link-card" href="https://open.spotify.com/" target="_blank" rel="noopener"><b>Spotify</b><span>Open music ↗</span></a>
-        <a class="link-card" href="https://music.apple.com/" target="_blank" rel="noopener"><b>Apple Music</b><span>Open music ↗</span></a>
-        <a class="link-card" href="https://soundcloud.com/" target="_blank" rel="noopener"><b>SoundCloud</b><span>Open music ↗</span></a>
-      </div>
-    </section>
-
-    <section id="favorites" class="section">
-      <div class="page-title"><p class="eyebrow">YOUR PICKS</p><h1>Favorites</h1></div>
-      <div id="favoriteGrid" class="game-grid"></div>
-      <p id="favEmpty" class="empty">You haven't favorited any games yet. ⭐ a game to save it here.</p>
-    </section>
-
-    <section id="settings" class="section">
-      <div class="page-title"><p class="eyebrow">CUSTOMIZE</p><h1>Settings</h1></div>
-      <div class="settings-card">
-        <label><span>Dark mode</span><input id="darkToggle" type="checkbox" checked></label>
-        <label><span>Show game emojis</span><input id="emojiToggle" type="checkbox" checked></label>
-      </div>
-    </section>
-  </main>
-
-  <div id="toast" class="toast"></div>
-  <script src="script.js"></script>
-</body>
-</html>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Malikhi Games</title><link rel="stylesheet" href="style.css"></head><body>
+<header class="topbar"><button id="menuBtn" class="icon-btn">☰</button><div class="logo">MALIKHI<span> GAMES</span></div><div class="search-wrap"><input id="search" type="search" placeholder="Search games..." aria-label="Search games"></div><button id="themeBtn" class="icon-btn">☀</button></header>
+<aside id="sidebar" class="sidebar"><nav><button class="nav-item active" data-section="games">🎮 <span>Games</span></button><button class="nav-item" data-section="movies">🎬 <span>Movies & TV</span></button><button class="nav-item" data-section="anime">🍥 <span>Anime</span></button><button class="nav-item" data-section="music">🎵 <span>Music</span></button><button class="nav-item" data-section="social">📱 <span>Social</span></button><button class="nav-item" data-section="favorites">⭐ <span>Favorites</span></button></nav><div class="side-bottom"><button class="nav-item" data-section="settings">⚙️ <span>Settings</span></button></div></aside>
+<main class="main"><section id="games" class="section active-section"><div class="hero"><div><p class="eyebrow">WELCOME TO</p><h1>Malikhi Games</h1><p>Your clean little hub for games, entertainment, anime, and music.</p></div><button id="randomBtn" class="primary">🎲 Random Game</button></div><div class="section-head"><h2>Featured Games</h2><span id="count"></span></div><div id="gameGrid" class="game-grid"></div><p id="empty" class="empty hidden">No games found. Try another search.</p></section>
+<section id="movies" class="section"><div class="page-title"><p class="eyebrow">WATCH</p><h1>Movies & TV</h1></div><div class="link-grid"><a class="link-card" href="https://www.netflix.com/" target="_blank"><b>Netflix</b><span>Official site ↗</span></a><a class="link-card" href="https://www.hulu.com/" target="_blank"><b>Hulu</b><span>Official site ↗</span></a><a class="link-card" href="https://www.disneyplus.com/" target="_blank"><b>Disney+</b><span>Official site ↗</span></a><a class="link-card" href="https://www.max.com/" target="_blank"><b>Max</b><span>Official site ↗</span></a></div></section>
+<section id="anime" class="section"><div class="page-title"><p class="eyebrow">WATCH</p><h1>Anime</h1></div><div class="link-grid"><a class="link-card" href="https://www.crunchyroll.com/" target="_blank"><b>Crunchyroll</b><span>Official site ↗</span></a><a class="link-card" href="https://www.hidive.com/" target="_blank"><b>HIDIVE</b><span>Official site ↗</span></a></div></section>
+<section id="music" class="section"><div class="page-title"><p class="eyebrow">LISTEN</p><h1>Music</h1></div><div class="link-grid"><a class="link-card" href="https://open.spotify.com/" target="_blank"><b>Spotify</b><span>Open music ↗</span></a><a class="link-card" href="https://music.apple.com/" target="_blank"><b>Apple Music</b><span>Open music ↗</span></a><a class="link-card" href="https://soundcloud.com/" target="_blank"><b>SoundCloud</b><span>Open music ↗</span></a></div></section>
+<section id="social" class="section"><div class="page-title"><p class="eyebrow">SOCIAL</p><h1>Social Media</h1></div><div class="link-grid"><a class="link-card" href="https://www.snapchat.com/" target="_blank"><b>👻 Snapchat</b><span>Open Snapchat ↗</span></a><a class="link-card" href="https://www.tiktok.com/" target="_blank"><b>🎵 TikTok</b><span>Open TikTok ↗</span></a></div></section>
+<section id="favorites" class="section"><div class="page-title"><p class="eyebrow">YOUR PICKS</p><h1>Favorites</h1></div><div id="favoriteGrid" class="game-grid"></div><p id="favEmpty" class="empty">You haven't favorited any games yet. ⭐ a game to save it here.</p></section>
+<section id="settings" class="section"><div class="page-title"><p class="eyebrow">CUSTOMIZE</p><h1>Settings</h1></div><div class="settings-card"><label><span>Dark mode</span><input id="darkToggle" type="checkbox" checked></label><label><span>Show game emojis</span><input id="emojiToggle" type="checkbox" checked></label></div></section></main><div id="toast" class="toast"></div><script src="script.js"></script></body></html>
