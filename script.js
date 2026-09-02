@@ -48,7 +48,8 @@ const games = [
   {id:"tetris-online",name:"Tetris Online",desc:"Play Tetris online",emoji:"🧱",url:"https://tetris.com/play-tetris"},
 
   {id:"snapchat",name:"Snapchat",desc:"Open Snapchat",emoji:"👻",url:"https://www.snapchat.com/"},
-  {id:"tiktok",name:"TikTok",desc:"Open TikTok",emoji:"🎵",url:"https://www.tiktok.com/"}
+  {id:"tiktok",name:"TikTok",desc:"Open TikTok",emoji:"🎵",url:"https://www.tiktok.com/"},
+
   {id:"target-shooter",name:"Target Shooter",desc:"Hit the targets",emoji:"🎯",url:"target-shooter.html"},
   {id:"paddle-ball",name:"Paddle Ball",desc:"Keep the ball alive",emoji:"🏓",url:"paddle-ball.html"},
   {id:"wall-jump",name:"Wall Jump",desc:"Jump higher and higher",emoji:"🧗",url:"wall-jump.html"},
@@ -89,15 +90,9 @@ const games = [
   {id:"quick-memory",name:"Quick Memory",desc:"Remember the pattern",emoji:"🧠",url:"quick-memory.html"},
   {id:"word-scramble",name:"Word Scramble",desc:"Unscramble the word",emoji:"🔤",url:"word-scramble.html"},
   {id:"color-switch",name:"Color Switch",desc:"Tap when the color matches",emoji:"🌈",url:"color-switch.html"}
- {id:"tiktok",name:"TikTok",desc:"Open TikTok",emoji:"🎵",url:"https://www.tiktok.com/"},
-{id:"target-shooter",...
-{id:"color-switch",name:"Color Switch",desc:"Tap when the color matches",emoji:"🌈",url:"color-switch.html"}
 ];
 
 let favorites = JSON.parse(
-  localStorage.getItem("malikhiFavorites") || "[]"
-);
- let favorites = JSON.parse(
   localStorage.getItem("malikhiFavorites") || "[]"
 );
 
