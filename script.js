@@ -19,11 +19,33 @@ const games = [
   {id:"sokoban",name:"Sokoban",desc:"Push the boxes",emoji:"📦",url:"sokoban.html"},
   {id:"tetris",name:"Tetris",desc:"Block-stacking classic",emoji:"🧱",url:"tetris.html"},
   {id:"typing",name:"Typing Race",desc:"Test your typing speed",emoji:"⌨️",url:"typing.html"},
-{id:"driving",name:"Driving Game",desc:"Dodge traffic and beat your high score",emoji:"🏎️",url:"driving-game.html"},
+
+  {id:"driving",name:"Driving Game",desc:"Dodge traffic and beat your high score",emoji:"🏎️",url:"driving-game.html"},
+  {id:"reaction-test",name:"Reaction Test",desc:"Test how fast you are",emoji:"⚡",url:"reaction-test.html"},
+  {id:"click-speed",name:"Click Speed",desc:"Click as fast as you can",emoji:"🖱️",url:"click-speed.html"},
+  {id:"guess-number",name:"Guess the Number",desc:"Guess the secret number",emoji:"🔢",url:"guess-number.html"},
+  {id:"rock-paper-scissors",name:"Rock Paper Scissors",desc:"Beat the computer",emoji:"✊",url:"rock-paper-scissors.html"},
+  {id:"coin-flip",name:"Coin Flip",desc:"Heads or tails?",emoji:"🪙",url:"coin-flip.html"},
+  {id:"dice-roll",name:"Dice Roll",desc:"Roll the dice",emoji:"🎲",url:"dice-roll.html"},
+  {id:"high-low",name:"High or Low",desc:"Guess the next number",emoji:"📈",url:"high-low.html"},
+  {id:"math-blaster",name:"Math Blaster",desc:"Solve quick math problems",emoji:"➕",url:"math-blaster.html"},
+  {id:"color-match",name:"Color Match",desc:"Match the target color",emoji:"🎨",url:"color-match.html"},
+  {id:"whack-a-box",name:"Whack-a-Box",desc:"Hit the moving box",emoji:"🟦",url:"whack-a-box.html"},
+  {id:"avoid-boxes",name:"Avoid the Boxes",desc:"Survive as long as possible",emoji:"💨",url:"avoid-boxes.html"},
+  {id:"dot-chaser",name:"Dot Chaser",desc:"Catch the moving dot",emoji:"🔴",url:"dot-chaser.html"},
+  {id:"line-rider-mini",name:"Line Rider Mini",desc:"Draw your own track",emoji:"✏️",url:"line-rider-mini.html"},
+  {id:"tic-tac-toe",name:"Tic Tac Toe",desc:"Play against the computer",emoji:"❌",url:"tic-tac-toe.html"},
+  {id:"connect-four-mini",name:"Connect Four Mini",desc:"Get four in a row",emoji:"🔴",url:"connect-four-mini.html"},
+  {id:"lights-out",name:"Lights Out",desc:"Turn every light off",emoji:"💡",url:"lights-out.html"},
+  {id:"memory-mini",name:"Memory Mini",desc:"Match the pairs",emoji:"🧠",url:"memory-mini.html"},
+  {id:"hangman-mini",name:"Hangman Mini",desc:"Guess the hidden word",emoji:"🔤",url:"hangman-mini.html"},
+  {id:"typing-test",name:"Typing Test",desc:"Test your typing speed",emoji:"⌨️",url:"typing-test.html"},
+  {id:"space-dodge",name:"Space Dodge",desc:"Dodge falling meteors",emoji:"🚀",url:"space-dodge.html"},
+
   {id:"chess",name:"Chess",desc:"Play chess online",emoji:"♟️",url:"https://www.chess.com/play/online"},
   {id:"agar",name:"Agar.io",desc:"Grow and survive",emoji:"🟢",url:"https://agar.io/"},
   {id:"krunker",name:"Krunker",desc:"Browser FPS",emoji:"🎯",url:"https://krunker.io/"},
-  {id:"tetris-online",name:"Tetris Online",desc:"Play online",emoji:"🧱",url:"https://tetris.com/play-tetris"},
+  {id:"tetris-online",name:"Tetris Online",desc:"Play Tetris online",emoji:"🧱",url:"https://tetris.com/play-tetris"},
 
   {id:"snapchat",name:"Snapchat",desc:"Open Snapchat",emoji:"👻",url:"https://www.snapchat.com/"},
   {id:"tiktok",name:"TikTok",desc:"Open TikTok",emoji:"🎵",url:"https://www.tiktok.com/"}
@@ -44,17 +66,12 @@ function card(g) {
 
   return `
     <article class="game-card" data-name="${g.name.toLowerCase()}">
-
-      <button class="fav"
-        data-fav="${g.id}"
-        title="Favorite">
+      <button class="fav" data-fav="${g.id}" title="Favorite">
         ${liked ? "★" : "☆"}
       </button>
 
       <div class="game-art">
-        ${document.body.classList.contains("noemoji")
-          ? "🎮"
-          : g.emoji}
+        ${document.body.classList.contains("noemoji") ? "🎮" : g.emoji}
       </div>
 
       <div class="game-info">
@@ -62,13 +79,12 @@ function card(g) {
         <span>${g.desc}</span>
 
         <a class="play"
-          href="${g.url}"
-          target="_blank"
-          rel="noopener">
+           href="${g.url}"
+           target="_blank"
+           rel="noopener">
           Play ↗
         </a>
       </div>
-
     </article>
   `;
 }
@@ -117,15 +133,11 @@ function toast(msg) {
   }, 1400);
 }
 
-
-/* NAVIGATION + FAVORITES */
-
 document.addEventListener("click", e => {
 
   const nav = e.target.closest("[data-section]");
 
   if (nav) {
-
     document
       .querySelectorAll(".nav-item")
       .forEach(x => x.classList.remove("active"));
@@ -149,66 +161,50 @@ document.addEventListener("click", e => {
     }
   }
 
-
   const fav = e.target.closest("[data-fav]");
 
   if (fav) {
-
     const id = fav.dataset.fav;
 
-    if (favorites.includes(id)) {
-
-      favorites = favorites.filter(
-        x => x !== id
-      );
-
-      toast("Removed from favorites");
-
-    } else {
-
-      favorites.push(id);
-
-      toast("Added to favorites ⭐");
-    }
+    favorites = favorites.includes(id)
+      ? favorites.filter(x => x !== id)
+      : [...favorites, id];
 
     save();
     render();
     renderFav();
+
+    toast(
+      favorites.includes(id)
+        ? "Added to favorites ⭐"
+        : "Removed from favorites"
+    );
   }
-
 });
-
-
-/* SEARCH */
 
 const search = document.querySelector("#search");
 
 if (search) {
-
   search.addEventListener("input", e => {
 
     const q = e.target.value
       .toLowerCase()
       .trim();
 
-    const filtered = games.filter(g =>
-      (g.name + " " + g.desc)
-        .toLowerCase()
-        .includes(q)
+    render(
+      games.filter(g =>
+        (g.name + " " + g.desc)
+          .toLowerCase()
+          .includes(q)
+      )
     );
-
-    render(filtered);
   });
 }
-
-
-/* RANDOM GAME */
 
 const randomBtn =
   document.querySelector("#randomBtn");
 
 if (randomBtn) {
-
   randomBtn.onclick = () => {
 
     const g =
@@ -224,25 +220,16 @@ if (randomBtn) {
   };
 }
 
-
-/* MENU */
-
 const menuBtn =
   document.querySelector("#menuBtn");
 
 if (menuBtn) {
-
   menuBtn.onclick = () => {
-
-    const sidebar =
-      document.querySelector("#sidebar");
-
-    sidebar.classList.toggle("collapsed");
+    document
+      .querySelector("#sidebar")
+      .classList.toggle("collapsed");
   };
 }
-
-
-/* DARK MODE */
 
 function setDark(dark) {
 
@@ -264,12 +251,10 @@ function setDark(dark) {
   }
 }
 
-
 const themeBtn =
   document.querySelector("#themeBtn");
 
 if (themeBtn) {
-
   themeBtn.onclick = () => {
 
     const isLight =
@@ -279,25 +264,19 @@ if (themeBtn) {
   };
 }
 
-
 const darkToggle =
   document.querySelector("#darkToggle");
 
 if (darkToggle) {
-
   darkToggle.onchange = e => {
     setDark(e.target.checked);
   };
 }
 
-
-/* EMOJI SETTING */
-
 const emojiToggle =
   document.querySelector("#emojiToggle");
 
 if (emojiToggle) {
-
   emojiToggle.onchange = e => {
 
     document.body.classList.toggle(
@@ -310,19 +289,9 @@ if (emojiToggle) {
   };
 }
 
-
-/* LOAD SAVED SETTINGS */
-
-const savedDark =
-  localStorage.getItem("dark");
-
-if (savedDark === "0") {
+if (localStorage.getItem("dark") === "0") {
   setDark(false);
 }
 
-
-/* START WEBSITE */
-
 render();
 renderFav();
-
