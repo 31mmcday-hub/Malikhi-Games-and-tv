@@ -89,8 +89,15 @@ const games = [
   {id:"quick-memory",name:"Quick Memory",desc:"Remember the pattern",emoji:"🧠",url:"quick-memory.html"},
   {id:"word-scramble",name:"Word Scramble",desc:"Unscramble the word",emoji:"🔤",url:"word-scramble.html"},
   {id:"color-switch",name:"Color Switch",desc:"Tap when the color matches",emoji:"🌈",url:"color-switch.html"}
+ {id:"tiktok",name:"TikTok",desc:"Open TikTok",emoji:"🎵",url:"https://www.tiktok.com/"},
+{id:"target-shooter",...
+{id:"color-switch",name:"Color Switch",desc:"Tap when the color matches",emoji:"🌈",url:"color-switch.html"}
+];
 
 let favorites = JSON.parse(
+  localStorage.getItem("malikhiFavorites") || "[]"
+);
+ let favorites = JSON.parse(
   localStorage.getItem("malikhiFavorites") || "[]"
 );
 
