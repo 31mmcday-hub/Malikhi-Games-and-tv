@@ -1,0 +1,14 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Connect Dots</title>
+<style>body{margin:0;background:#101827;color:white;font-family:Arial;text-align:center}main{max-width:850px;margin:auto;padding:25px}canvas{width:100%;background:#0b1220;border-radius:15px}button{padding:12px 18px;margin:8px;border:0;border-radius:9px;font-weight:bold}</style></head>
+<body><main><h1>🔴 Connect Dots</h1><p>Score: <b id="score">0</b> | Best: <b id="best">0</b></p><canvas id="game" width="800" height="500"></canvas><br><button onclick="start()">▶ Start / Restart</button><button onclick="location.href='index.html'">← Games</button><p>Move with WASD or Arrow Keys. Avoid the red obstacles!</p></main>
+<script>
+const c=document.getElementById("game"),ctx=c.getContext("2d"),scoreEl=document.getElementById("score"),bestEl=document.getElementById("best");
+let p={x:400,y:250,r:14},obs=[],score=0,running=false,last=0,keys={},best=+(localStorage.getItem("best_connect-dots")||0);bestEl.textContent=best;
+addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=1;if(e.code==="Space"&&!running)start()});addEventListener("keyup",e=>keys[e.key.toLowerCase()]=0);
+function start(){p={x:400,y:250,r:14};obs=[];score=0;running=true;last=performance.now();requestAnimationFrame(loop)}
+function loop(t){if(!running)return;let dt=Math.min(40,t-last);last=t;if(Math.random()<.035)obs.push({x:Math.random()*800,y:-20,r:12+Math.random()*14,v:2+Math.random()*3});
+let dx=(keys.arrowright||keys.d?1:0)-(keys.arrowleft||keys.a?1:0),dy=(keys.arrowdown||keys.s?1:0)-(keys.arrowup||keys.w?1:0);if(dx||dy){let l=Math.hypot(dx,dy);p.x+=dx/l*5*dt/16;p.y+=dy/l*5*dt/16}p.x=Math.max(14,Math.min(786,p.x));p.y=Math.max(14,Math.min(486,p.y));
+obs.forEach(o=>o.y+=o.v*dt/16);obs=obs.filter(o=>o.y<530);for(const o of obs)if(Math.hypot(o.x-p.x,o.y-p.y)<o.r+p.r){running=false;best=Math.max(best,Math.floor(score));localStorage.setItem("best_connect-dots",best);bestEl.textContent=best}
+score+=dt/100;scoreEl.textContent=Math.floor(score);draw();requestAnimationFrame(loop)}
+function draw(){ctx.clearRect(0,0,800,500);ctx.fillStyle="#3b82f6";ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#ef4444";obs.forEach(o=>{ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,Math.PI*2);ctx.fill()})}draw();
+</script></body></html>
