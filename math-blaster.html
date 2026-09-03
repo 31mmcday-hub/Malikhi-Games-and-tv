@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Math Blaster - Malikhi Games</title>
+<style>
+body{margin:0;background:#101827;color:#fff;font-family:Arial,sans-serif;text-align:center}
+main{max-width:700px;margin:auto;padding:25px}
+.card{background:#1e293b;border-radius:18px;padding:28px}
+#problem{font-size:52px;font-weight:bold;margin:30px}
+input{font-size:28px;width:180px;padding:10px;border-radius:10px;border:0;text-align:center}
+button{padding:12px 20px;margin:8px;border:0;border-radius:10px;font-weight:bold;cursor:pointer}
+.stats{display:flex;justify-content:space-around;font-size:20px}
+#message{min-height:28px;margin:18px}
+</style>
+</head>
+<body>
+<main>
+<h1>➕ Math Blaster</h1>
+<div class="card">
+<div class="stats">
+<span>Score: <b id="score">0</b></span>
+<span>Best: <b id="best">0</b></span>
+<span>Time: <b id="time">30</b></span>
+</div>
+<div id="problem">Press Start!</div>
+<input id="answer" type="number" autocomplete="off" disabled>
+<br>
+<button id="start">▶ Start</button>
+<button onclick="location.href='index.html'">← Games</button>
+<div id="message">Solve as many as you can in 30 seconds!</div>
+</div>
+</main>
+<script>
+let a,b,correct,score=0,time=30,running=false,timer;
+let best=Number(localStorage.getItem("mathBlasterBest")||0);
+document.getElementById("best").textContent=best;
+const problem=document.getElementById("problem");
+const answer=document.getElementById("answer");
+const scoreEl=document.getElementById("score");
+const timeEl=document.getElementById("time");
+const msg=document.getElementById("message");
+
+function newProblem(){
+  const type=Math.floor(Math.random()*3);
+  if(type===0){
+    a=Math.floor(Math.random()*20)+1;
+    b=Math.floor(Math.random()*20)+1;
+    correct=a+b;
+    problem.textContent=a+" + "+b+" = ?";
+  }else if(type===1){
+    a=Math.floor(Math.random()*20)+10;
+    b=Math.floor(Math.random()*10)+1;
+    correct=a-b;
+    problem.textContent=a+" − "+b+" = ?";
+  }else{
+    a=Math.floor(Math.random()*10)+2;
+    b=Math.floor(Math.random()*10)+2;
+    correct=a*b;
+    problem.textContent=a+" × "+b+" = ?";
+  }
+  answer.value="";
+  answer.focus();
+}
+
+function startGame(){
+  clearInterval(timer);
+  score=0; time=30; running=true;
+  scoreEl.textContent=score;
+  timeEl.textContent=time;
+  answer.disabled=false;
+  msg.textContent="GO! 🔥";
+  document.getElementById("start").textContent="Restart";
+  newProblem();
+  timer=setInterval(()=>{
+    time--;
+    timeEl.textContent=time;
+    if(time<=0) endGame();
+  },1000);
+}
+
+function check(){
+  if(!running) return;
+  if(Number(answer.value)===correct){
+    score++;
+    scoreEl.textContent=score;
+    msg.textContent="Correct! 🔥";
+    newProblem();
+  }else{
+    msg.textContent="Nope 😭 Try again!";
+    answer.select();
+  }
+}
+
+function endGame(){
+  running=false;
+  clearInterval(timer);
+  answer.disabled=true;
+  problem.textContent="Time's up! 🎉";
+  if(score>best){
+    best=score;
+    localStorage.setItem("mathBlasterBest",best);
+    document.getElementById("best").textContent=best;
+    msg.textContent="NEW HIGH SCORE! 🏆";
+  }else{
+    msg.textContent="You got "+score+" correct!";
+  }
+}
+
+document.getElementById("start").onclick=startGame;
+answer.addEventListener("keydown",e=>{
+  if(e.key==="Enter") check();
+});
+</script>
+</body>
+</html>
