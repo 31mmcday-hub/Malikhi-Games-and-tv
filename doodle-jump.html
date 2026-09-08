@@ -49,10 +49,13 @@ font-weight:bold;
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 
+
 let player;
 let platforms;
 let keys={};
 let score;
+let gameRunning;
+
 
 
 document.addEventListener("keydown",e=>{
@@ -63,6 +66,7 @@ keys[e.key]=true;
 document.addEventListener("keyup",e=>{
 keys[e.key]=false;
 });
+
 
 
 function restart(){
@@ -80,7 +84,7 @@ dy:0
 platforms=[];
 
 
-for(let i=0;i<8;i++){
+for(let i=0;i<10;i++){
 
 platforms.push({
 
@@ -95,6 +99,7 @@ h:10
 
 
 score=0;
+gameRunning=true;
 
 document.getElementById("score").innerHTML=0;
 
@@ -104,17 +109,24 @@ gameLoop();
 
 
 
+
 function update(){
 
 
-// movement
+if(!gameRunning)return;
+
+
+// movement speed
+
+let moveSpeed=3 + score/200;
+
 
 if(keys["ArrowLeft"]){
-player.dx=-3;
+player.dx=-moveSpeed;
 }
 
 else if(keys["ArrowRight"]){
-player.dx=3;
+player.dx=moveSpeed;
 }
 
 else{
@@ -125,15 +137,32 @@ player.dx=0;
 player.x+=player.dx;
 
 
-// gravity slower
 
-player.dy+=0.25;
+// wrap sides
+
+if(player.x>400){
+player.x=0;
+}
+
+if(player.x<0){
+player.x=400;
+}
+
+
+
+
+// gravity
+
+let gravity=0.25 + score/1000;
+
+player.dy+=gravity;
 
 player.y+=player.dy;
 
 
 
-// jump
+
+// jumping
 
 platforms.forEach(p=>{
 
@@ -146,7 +175,9 @@ player.y+player.h>p.y &&
 player.dy>0
 ){
 
-player.dy=-8;
+let jumpPower=-8 - score/300;
+
+player.dy=jumpPower;
 
 score++;
 
@@ -158,19 +189,9 @@ document.getElementById("score").innerHTML=score;
 
 
 
-// wrap around sides
-
-if(player.x>400){
-player.x=0;
-}
-
-if(player.x<0){
-player.x=400;
-}
 
 
-
-// camera
+// camera scroll
 
 if(player.y<250){
 
@@ -186,20 +207,37 @@ p.y+=move;
 
 
 
-// add platforms
+// delete old platforms
 
-while(platforms.length<8){
+platforms = platforms.filter(p=>p.y<650);
+
+
+
+
+// make new platforms forever
+
+while(platforms.length<12){
+
+let highest=Math.min(...platforms.map(p=>p.y));
+
+
+let gap=80 + Math.min(score/20,40);
+
 
 platforms.push({
 
 x:Math.random()*330,
-y:Math.min(...platforms.map(p=>p.y))-80,
+
+y:highest-gap,
+
 w:70,
+
 h:10
 
 });
 
 }
+
 
 
 
@@ -217,7 +255,10 @@ restart();
 
 
 
+
+
 function draw(){
+
 
 ctx.clearRect(0,0,400,600);
 
@@ -234,9 +275,11 @@ player.h
 );
 
 
+
 // platforms
 
 ctx.fillStyle="brown";
+
 
 platforms.forEach(p=>{
 
@@ -249,7 +292,10 @@ p.h
 
 });
 
+
 }
+
+
 
 
 
@@ -264,7 +310,9 @@ requestAnimationFrame(gameLoop);
 }
 
 
+
 restart();
+
 
 </script>
 
