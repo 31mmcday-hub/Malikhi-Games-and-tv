@@ -1,41 +1,310 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Flappy Bird Mini - Malikhi Games</title>
+<title>Flappy Bird</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#10131a;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center;padding:20px}
-.game{width:min(700px,100%);text-align:center;background:#181d27;border:1px solid #303746;border-radius:20px;padding:24px;box-shadow:0 15px 50px #0008}
-h1{margin:0 0 6px}p{color:#aeb6c5}canvas{width:min(620px,100%);height:auto;background:#080a0f;border-radius:14px;border:1px solid #394150;display:block;margin:18px auto}
-button{border:0;border-radius:12px;padding:12px 20px;background:#fff;color:#111;font-weight:700;cursor:pointer;font-size:16px}
-.score{font-size:20px;font-weight:700}.hint{font-size:14px}
+body{
+background:#38bdf8;
+color:white;
+font-family:Arial;
+text-align:center;
+}
+
+canvas{
+background:#7dd3fc;
+border:3px solid white;
+display:block;
+margin:auto;
+}
+
+button{
+padding:10px 20px;
+border-radius:10px;
+font-weight:bold;
+cursor:pointer;
+}
 </style>
+
 </head>
-<body><div class="game">
-<h1>🐦 Flappy Bird Mini</h1><p>Keep flying</p>
-<div class="score">Score: <span id="score">0</span> | Best: <span id="best">0</span></div>
-<canvas id="game" width="600" height="400"></canvas>
-<button id="start">Start / Restart</button>
-<p class="hint">Use your mouse or touch the game area. Move the player to catch the glowing target and avoid the red hazards.</p>
-</div>
+
+<body>
+
+<h1>🐦 Flappy Bird</h1>
+
+<h2>Score: <span id="score">0</span></h2>
+
+<canvas id="game" width="400" height="600"></canvas>
+
+<button onclick="restart()">Restart</button>
+
+<p>Space / Click = Fly</p>
+
+
 <script>
-const c=document.getElementById('game'),x=c.getContext('2d'),scoreEl=document.getElementById('score'),bestEl=document.getElementById('best');
-let player={x:300,y:330,r:16},target={x:100,y:100,r:12},hazards=[],score=0,running=false,last=0,best=+localStorage.getItem('mg-best-flappy-bird-mini')||0;
-bestEl.textContent=best;
-function reset(){player={x:300,y:330,r:16};target={x:100+Math.random()*400,y:70+Math.random()*260,r:12};hazards=[];score=0;scoreEl.textContent=0;running=true;last=performance.now();requestAnimationFrame(loop)}
-function move(e){let r=c.getBoundingClientRect(),p=e.touches?e.touches[0]:e;player.x=(p.clientX-r.left)*c.width/r.width;player.y=(p.clientY-r.top)*c.height/r.height}
-c.addEventListener('mousemove',move);c.addEventListener('touchmove',e=>{e.preventDefault();move(e)},{passive:false});
-function addHazard(){hazards.push({x:Math.random()*570+15,y:-20,r:10+Math.random()*12,s:100+Math.random()*140})}
-function loop(t){if(!running)return;let dt=Math.min(.03,(t-last)/1000);last=t;if(Math.random()<dt*.9)addHazard();
-hazards.forEach(h=>h.y+=h.s*dt);hazards=hazards.filter(h=>h.y<430);
-let dx=player.x-target.x,dy=player.y-target.y;if(Math.hypot(dx,dy)<player.r+target.r){score++;scoreEl.textContent=score;target.x=30+Math.random()*540;target.y=50+Math.random()*300}
-for(const h of hazards)if(Math.hypot(player.x-h.x,player.y-h.y)<player.r+h.r){running=false;if(score>best){best=score;localStorage.setItem('mg-best-flappy-bird-mini',best);bestEl.textContent=best}draw(true);return}
-draw(false);requestAnimationFrame(loop)}
-function draw(over){x.clearRect(0,0,c.width,c.height);x.fillStyle='#0b0e14';x.fillRect(0,0,c.width,c.height);
-x.fillStyle='#5cf';x.beginPath();x.arc(target.x,target.y,target.r,0,Math.PI*2);x.fill();
-x.fillStyle='#f44';hazards.forEach(h=>{x.beginPath();x.arc(h.x,h.y,h.r,0,Math.PI*2);x.fill()});
-x.fillStyle='#fff';x.beginPath();x.arc(player.x,player.y,player.r,0,Math.PI*2);x.fill();
-if(over){x.fillStyle='#fff';x.font='bold 38px Arial';x.textAlign='center';x.fillText('GAME OVER',300,200);x.font='20px Arial';x.fillText('Score: '+score,300,235)}}
-draw(false);document.getElementById('start').onclick=reset;
-</script></body></html>
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+
+let bird;
+let pipes;
+let score;
+let gameOver;
+
+
+document.addEventListener("keydown",e=>{
+if(e.code==="Space")
+flap();
+});
+
+
+canvas.onclick=flap;
+
+
+
+function restart(){
+
+bird={
+x:80,
+y:300,
+size:18,
+velocity:0
+};
+
+
+pipes=[];
+
+score=0;
+
+gameOver=false;
+
+document.getElementById("score").innerHTML=0;
+
+
+spawnPipe();
+
+}
+
+
+
+function flap(){
+
+if(!gameOver){
+
+bird.velocity=-6;
+
+}
+
+}
+
+
+
+
+function spawnPipe(){
+
+let gap=170;
+
+let min=60;
+
+let max=canvas.height-gap-60;
+
+
+let topHeight=
+Math.random()*(max-min)+min;
+
+
+pipes.push({
+
+x:400,
+
+top:topHeight,
+
+bottom:canvas.height-topHeight-gap,
+
+passed:false
+
+});
+
+}
+
+
+
+function update(){
+
+
+if(gameOver)return;
+
+
+
+// bird
+
+bird.velocity+=0.35;
+
+bird.y+=bird.velocity;
+
+
+
+// pipes
+
+pipes.forEach(p=>{
+
+p.x-=3;
+
+
+
+if(
+!p.passed &&
+p.x+60<bird.x
+){
+
+score++;
+
+p.passed=true;
+
+document.getElementById("score").innerHTML=score;
+
+}
+
+
+
+});
+
+
+
+// spawn new pipes
+
+if(
+pipes.length===0 ||
+pipes[pipes.length-1].x<220
+){
+
+spawnPipe();
+
+}
+
+
+
+// collision
+
+pipes.forEach(p=>{
+
+
+if(
+
+bird.x+bird.size>p.x &&
+bird.x-bird.size<p.x+60 &&
+
+(
+bird.y-bird.size<p.top ||
+bird.y+bird.size>canvas.height-p.bottom
+
+)
+
+){
+
+end();
+
+}
+
+
+});
+
+
+
+// ground
+
+if(
+bird.y>canvas.height ||
+bird.y<0
+){
+
+end();
+
+}
+
+
+
+draw();
+
+requestAnimationFrame(update);
+
+}
+
+
+
+
+
+function draw(){
+
+ctx.clearRect(0,0,400,600);
+
+
+// bird
+
+ctx.fillStyle="yellow";
+
+ctx.beginPath();
+
+ctx.arc(
+bird.x,
+bird.y,
+bird.size,
+0,
+Math.PI*2
+);
+
+ctx.fill();
+
+
+// pipes
+
+ctx.fillStyle="green";
+
+
+pipes.forEach(p=>{
+
+
+ctx.fillRect(
+p.x,
+0,
+60,
+p.top
+);
+
+
+ctx.fillRect(
+p.x,
+canvas.height-p.bottom,
+60,
+p.bottom
+);
+
+
+});
+
+
+}
+
+
+
+
+function end(){
+
+gameOver=true;
+
+alert("Game Over! Score: "+score);
+
+}
+
+
+
+restart();
+
+update();
+
+
+</script>
+
+</body>
+</html>
