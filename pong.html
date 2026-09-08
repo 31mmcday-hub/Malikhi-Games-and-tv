@@ -20,15 +20,19 @@ border:2px solid white;
 }
 
 button{
-padding:8px 15px;
-margin:5px;
+padding:8px 12px;
+margin:4px;
 border-radius:8px;
 cursor:pointer;
 font-weight:bold;
 }
 
 #score{
-font-size:28px;
+font-size:30px;
+}
+
+#msg{
+font-size:25px;
 }
 </style>
 
@@ -39,20 +43,25 @@ font-size:28px;
 <h2>🏓 Pong</h2>
 
 <div>
-Speed:
-<button onclick="setSpeed(3)">🐢 Slow</button>
-<button onclick="setSpeed(5)">⚡ Normal</button>
-<button onclick="setSpeed(7)">🔥 Fast</button>
-<button onclick="setSpeed(10)">💀 Insane</button>
+Difficulty:
+<button onclick="setDifficulty('easy')">🟢 Easy</button>
+<button onclick="setDifficulty('medium')">🟡 Medium</button>
+<button onclick="setDifficulty('hard')">🔴 Hard</button>
 </div>
 
-<div id="score">
-Player 0 - 0 AI
+<div>
+Speed:
+<button onclick="setSpeed(8)">🐢 Slow</button>
+<button onclick="setSpeed(15)">⚡ Normal</button>
+<button onclick="setSpeed(25)">🔥 Fast</button>
+<button onclick="setSpeed(45)">💀 Insane</button>
 </div>
+
+<p id="score">Player 0 - 0 AI</p>
 
 <canvas id="c" width="700" height="450"></canvas>
 
-<h3 id="message"></h3>
+<p id="msg"></p>
 
 
 <script>
@@ -64,33 +73,62 @@ const x=canvas.getContext("2d");
 let py=180;
 let ay=180;
 
+
 let up=false;
 let down=false;
+
 
 let playerScore=0;
 let aiScore=0;
 
-let speed=5;
+
+let speed=15;
+let difficulty="medium";
+
+
+let aiPower=.08;
 
 
 let b={
 x:350,
 y:225,
 vx:speed,
-vy:3
+vy:5
 };
 
 
-function setSpeed(s){
 
-speed=s;
+function setDifficulty(level){
 
-b.vx=b.vx>0 ? speed : -speed;
+difficulty=level;
+
+if(level==="easy"){
+aiPower=.03;
+}
+
+if(level==="medium"){
+aiPower=.08;
+}
+
+if(level==="hard"){
+aiPower=.18;
+}
 
 }
 
 
-// controls
+
+function setSpeed(amount){
+
+speed=amount;
+
+b.vx=b.vx>0 ? speed : -speed;
+
+b.vy=speed*.35;
+
+}
+
+
 
 onkeydown=e=>{
 
@@ -101,6 +139,7 @@ if(e.key==="ArrowDown")
 down=true;
 
 };
+
 
 
 onkeyup=e=>{
@@ -120,8 +159,8 @@ function resetBall(){
 b={
 x:350,
 y:225,
-vx:b.vx>0?speed:-speed,
-vy:3
+vx:b.vx>0 ? speed : -speed,
+vy:speed*.35
 };
 
 }
@@ -131,33 +170,33 @@ vy:3
 function update(){
 
 
-// player
-
 if(up)
-py-=8;
+py-=10;
+
 
 if(down)
-py+=8;
+py+=10;
 
 
 if(py<0)
 py=0;
+
 
 if(py>360)
 py=360;
 
 
 
-// ball
-
 b.x+=b.vx;
 b.y+=b.vy;
 
 
-// walls
 
-if(b.y<0 || b.y>450)
+if(b.y<0 || b.y>450){
+
 b.vy*=-1;
+
+}
 
 
 
@@ -177,11 +216,9 @@ b.vx=Math.abs(b.vx);
 
 // AI
 
-ay+=(b.y-ay-45)*.08;
+ay += (b.y-ay-45)*aiPower;
 
 
-
-// AI hit
 
 if(
 b.x>665 &&
@@ -195,7 +232,7 @@ b.vx=-Math.abs(b.vx);
 
 
 
-// score
+// scoring
 
 if(b.x<0){
 
@@ -213,12 +250,12 @@ resetBall();
 }
 
 
+
 // win
 
 if(playerScore>=10){
 
-document.getElementById("message").innerHTML=
-"🔥 You Win!";
+document.getElementById("msg").innerHTML="🔥 YOU WIN";
 
 return;
 
@@ -227,13 +264,11 @@ return;
 
 if(aiScore>=10){
 
-document.getElementById("message").innerHTML=
-"💀 AI Wins!";
+document.getElementById("msg").innerHTML="💀 AI WINS";
 
 return;
 
 }
-
 
 
 draw();
@@ -244,9 +279,11 @@ requestAnimationFrame(update);
 
 
 
+
 function draw(){
 
 x.clearRect(0,0,700,450);
+
 
 x.fillStyle="white";
 
@@ -270,8 +307,8 @@ document.getElementById("score").innerHTML=
 }
 
 
-update();
 
+update();
 
 </script>
 
