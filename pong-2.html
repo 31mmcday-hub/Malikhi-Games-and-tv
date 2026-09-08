@@ -1,41 +1,209 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Pong 2 - Malikhi Games</title>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#10131a;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center;padding:20px}
-.game{width:min(700px,100%);text-align:center;background:#181d27;border:1px solid #303746;border-radius:20px;padding:24px;box-shadow:0 15px 50px #0008}
-h1{margin:0 0 6px}p{color:#aeb6c5}canvas{width:min(620px,100%);height:auto;background:#080a0f;border-radius:14px;border:1px solid #394150;display:block;margin:18px auto}
-button{border:0;border-radius:12px;padding:12px 20px;background:#fff;color:#111;font-weight:700;cursor:pointer;font-size:16px}
-.score{font-size:20px;font-weight:700}.hint{font-size:14px}
+body{
+background:#101827;
+color:white;
+font-family:Arial;
+text-align:center;
+}
+canvas{
+background:#000;
+border:3px solid white;
+margin-top:20px;
+}
+button{
+padding:10px 20px;
+border-radius:10px;
+border:0;
+font-weight:bold;
+}
 </style>
 </head>
-<body><div class="game">
-<h1>🏓 Pong 2</h1><p>Classic paddle battle</p>
-<div class="score">Score: <span id="score">0</span> | Best: <span id="best">0</span></div>
-<canvas id="game" width="600" height="400"></canvas>
-<button id="start">Start / Restart</button>
-<p class="hint">Use your mouse or touch the game area. Move the player to catch the glowing target and avoid the red hazards.</p>
-</div>
+
+<body>
+
+<h1>🏓 Pong 2</h1>
+
+<p>
+Player: <span id="p">0</span>
+-
+AI: <span id="a">0</span>
+</p>
+
+<canvas id="game" width="700" height="400"></canvas>
+
+<br>
+<button onclick="start()">Start</button>
+
 <script>
-const c=document.getElementById('game'),x=c.getContext('2d'),scoreEl=document.getElementById('score'),bestEl=document.getElementById('best');
-let player={x:300,y:330,r:16},target={x:100,y:100,r:12},hazards=[],score=0,running=false,last=0,best=+localStorage.getItem('mg-best-pong-2')||0;
-bestEl.textContent=best;
-function reset(){player={x:300,y:330,r:16};target={x:100+Math.random()*400,y:70+Math.random()*260,r:12};hazards=[];score=0;scoreEl.textContent=0;running=true;last=performance.now();requestAnimationFrame(loop)}
-function move(e){let r=c.getBoundingClientRect(),p=e.touches?e.touches[0]:e;player.x=(p.clientX-r.left)*c.width/r.width;player.y=(p.clientY-r.top)*c.height/r.height}
-c.addEventListener('mousemove',move);c.addEventListener('touchmove',e=>{e.preventDefault();move(e)},{passive:false});
-function addHazard(){hazards.push({x:Math.random()*570+15,y:-20,r:10+Math.random()*12,s:100+Math.random()*140})}
-function loop(t){if(!running)return;let dt=Math.min(.03,(t-last)/1000);last=t;if(Math.random()<dt*.9)addHazard();
-hazards.forEach(h=>h.y+=h.s*dt);hazards=hazards.filter(h=>h.y<430);
-let dx=player.x-target.x,dy=player.y-target.y;if(Math.hypot(dx,dy)<player.r+target.r){score++;scoreEl.textContent=score;target.x=30+Math.random()*540;target.y=50+Math.random()*300}
-for(const h of hazards)if(Math.hypot(player.x-h.x,player.y-h.y)<player.r+h.r){running=false;if(score>best){best=score;localStorage.setItem('mg-best-pong-2',best);bestEl.textContent=best}draw(true);return}
-draw(false);requestAnimationFrame(loop)}
-function draw(over){x.clearRect(0,0,c.width,c.height);x.fillStyle='#0b0e14';x.fillRect(0,0,c.width,c.height);
-x.fillStyle='#5cf';x.beginPath();x.arc(target.x,target.y,target.r,0,Math.PI*2);x.fill();
-x.fillStyle='#f44';hazards.forEach(h=>{x.beginPath();x.arc(h.x,h.y,h.r,0,Math.PI*2);x.fill()});
-x.fillStyle='#fff';x.beginPath();x.arc(player.x,player.y,player.r,0,Math.PI*2);x.fill();
-if(over){x.fillStyle='#fff';x.font='bold 38px Arial';x.textAlign='center';x.fillText('GAME OVER',300,200);x.font='20px Arial';x.fillText('Score: '+score,300,235)}}
-draw(false);document.getElementById('start').onclick=reset;
-</script></body></html>
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+let player,ai,ball,pScore,aScore,running=false;
+
+document.addEventListener("mousemove",e=>{
+let rect=canvas.getBoundingClientRect();
+player.y=e.clientY-rect.top-50;
+});
+
+
+function start(){
+
+player={x:20,y:150,w:15,h:100};
+ai={x:665,y:150,w:15,h:100};
+
+ball={
+x:350,
+y:200,
+r:10,
+dx:5,
+dy:3
+};
+
+pScore=0;
+aScore=0;
+
+document.getElementById("p").innerHTML=0;
+document.getElementById("a").innerHTML=0;
+
+running=true;
+
+loop();
+
+}
+
+
+function loop(){
+
+if(!running)return;
+
+
+ball.x+=ball.dx;
+ball.y+=ball.dy;
+
+
+// walls
+
+if(ball.y<0||ball.y>400){
+ball.dy*=-1;
+}
+
+
+// AI
+
+if(ai.y+50<ball.y)
+ai.y+=3;
+
+if(ai.y+50>ball.y)
+ai.y-=3;
+
+
+// paddle hit
+
+if(
+ball.x-ball.r<player.x+player.w &&
+ball.y>player.y &&
+ball.y<player.y+player.h
+){
+ball.dx*=-1;
+}
+
+
+if(
+ball.x+ball.r>ai.x &&
+ball.y>ai.y &&
+ball.y<ai.y+ai.h
+){
+ball.dx*=-1;
+}
+
+
+// scoring
+
+if(ball.x<0){
+
+aScore++;
+reset();
+
+}
+
+if(ball.x>700){
+
+pScore++;
+reset();
+
+}
+
+
+document.getElementById("p").innerHTML=pScore;
+document.getElementById("a").innerHTML=aScore;
+
+
+draw();
+
+requestAnimationFrame(loop);
+
+}
+
+
+
+function reset(){
+
+ball.x=350;
+ball.y=200;
+ball.dx*=-1;
+
+}
+
+
+
+function draw(){
+
+ctx.clearRect(0,0,700,400);
+
+
+// paddles
+
+ctx.fillStyle="white";
+
+ctx.fillRect(
+player.x,
+player.y,
+player.w,
+player.h
+);
+
+
+ctx.fillRect(
+ai.x,
+ai.y,
+ai.w,
+ai.h
+);
+
+
+// ball
+
+ctx.beginPath();
+
+ctx.arc(
+ball.x,
+ball.y,
+ball.r,
+0,
+Math.PI*2
+);
+
+ctx.fill();
+
+
+}
+
+</script>
+
+</body>
+</html>
