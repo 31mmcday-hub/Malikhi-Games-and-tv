@@ -53,9 +53,13 @@ let score;
 let gameOver;
 
 
+
 document.addEventListener("keydown",e=>{
-if(e.code==="Space")
+
+if(e.code==="Space"){
 flap();
+}
+
 });
 
 
@@ -84,6 +88,8 @@ document.getElementById("score").innerHTML=0;
 
 spawnPipe();
 
+requestAnimationFrame(update);
+
 }
 
 
@@ -92,7 +98,7 @@ function flap(){
 
 if(!gameOver){
 
-bird.velocity=-6;
+bird.velocity=-7;
 
 }
 
@@ -103,11 +109,11 @@ bird.velocity=-6;
 
 function spawnPipe(){
 
-let gap=170;
+let gap=230;
 
-let min=60;
+let min=70;
 
-let max=canvas.height-gap-60;
+let max=canvas.height-gap-70;
 
 
 let topHeight=
@@ -137,9 +143,9 @@ if(gameOver)return;
 
 
 
-// bird
+// gravity
 
-bird.velocity+=0.35;
+bird.velocity+=0.22;
 
 bird.y+=bird.velocity;
 
@@ -149,7 +155,7 @@ bird.y+=bird.velocity;
 
 pipes.forEach(p=>{
 
-p.x-=3;
+p.x-=2;
 
 
 
@@ -166,13 +172,11 @@ document.getElementById("score").innerHTML=score;
 
 }
 
-
-
 });
 
 
 
-// spawn new pipes
+// new pipes
 
 if(
 pipes.length===0 ||
@@ -182,6 +186,7 @@ pipes[pipes.length-1].x<220
 spawnPipe();
 
 }
+
 
 
 
@@ -212,7 +217,7 @@ end();
 
 
 
-// ground
+// ground / sky
 
 if(
 bird.y>canvas.height ||
@@ -230,7 +235,6 @@ draw();
 requestAnimationFrame(update);
 
 }
-
 
 
 
@@ -255,6 +259,7 @@ Math.PI*2
 );
 
 ctx.fill();
+
 
 
 // pipes
@@ -288,21 +293,21 @@ p.bottom
 
 
 
-
 function end(){
 
 gameOver=true;
 
+setTimeout(()=>{
+
 alert("Game Over! Score: "+score);
+
+},100);
 
 }
 
 
 
 restart();
-
-update();
-
 
 </script>
 
