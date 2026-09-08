@@ -1,11 +1,130 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Click Speed</title>
-<style>body{margin:0;background:#101827;color:white;font-family:Arial;text-align:center}main{max-width:800px;margin:auto;padding:24px}.card{background:#1e293b;padding:25px;border-radius:18px}canvas{width:100%;background:#07101f;border-radius:12px}button{padding:12px 18px;margin:8px;border:0;border-radius:10px;font-weight:bold}</style></head>
-<body><main><h1>🖱️ Click Speed</h1><div class="card"><p>Score: <b id="s">0</b> | Best: <b id="b">0</b></p><canvas id="c" width="800" height="500"></canvas><br><button onclick="start()">▶ Start / Restart</button><button onclick="location.href='index.html'">← Games</button><p>Use WASD or Arrow Keys to move. Avoid the red obstacles!</p></div></main>
+<!doctype html>
+<html>
+<head>
+<title>Click Speed - Malikhi Games</title>
+
+<style>
+body{
+background:#111827;
+color:white;
+font-family:Arial;
+text-align:center;
+}
+
+button{
+font-size:30px;
+padding:25px 50px;
+border-radius:15px;
+cursor:pointer;
+border:0;
+}
+
+#click{
+background:#22c55e;
+color:white;
+}
+
+.box{
+margin-top:40px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>🖱️ Click Speed</h1>
+
+<div class="box">
+
+<h2>Time: <span id="time">10</span>s</h2>
+
+<h2>Clicks: <span id="score">0</span></h2>
+
+<h2>CPS: <span id="cps">0</span></h2>
+
+<button id="click">CLICK!</button>
+
+<br><br>
+
+<button onclick="start()">Start</button>
+
+<h2 id="msg"></h2>
+
+</div>
+
+
 <script>
-const c=document.getElementById('c'),x=c.getContext('2d'),s=document.getElementById('s'),b=document.getElementById('b');let p,o,sc=0,go=0,last=0,k={};const key='best_click_speed';b.textContent=localStorage[key]||0;
-addEventListener('keydown',e=>{k[e.key.toLowerCase()]=1;if(e.code==='Space'&&!go)start()});addEventListener('keyup',e=>k[e.key.toLowerCase()]=0);
-function start(){p={x:400,y:250};o=[];sc=0;go=1;last=performance.now();requestAnimationFrame(loop)}
-function loop(t){if(!go)return;let d=Math.min(40,t-last);last=t;if(Math.random()<.035)o.push({x:Math.random()*800,y:-20,r:12+Math.random()*16,v:2+Math.random()*3});
-let dx=(k.arrowright||k.d?1:0)-(k.arrowleft||k.a?1:0),dy=(k.arrowdown||k.s?1:0)-(k.arrowup||k.w?1:0);if(dx||dy){let l=Math.hypot(dx,dy);p.x+=dx/l*5*d/16;p.y+=dy/l*5*d/16}p.x=Math.max(14,Math.min(786,p.x));p.y=Math.max(14,Math.min(486,p.y));o.forEach(q=>q.y+=q.v*d/16);o=o.filter(q=>q.y<530);for(const q of o)if(Math.hypot(q.x-p.x,q.y-p.y)<q.r+14){go=0;let z=Math.floor(sc);if(z>(localStorage[key]||0)){localStorage[key]=z;b.textContent=z}}sc+=d/100;s.textContent=Math.floor(sc);draw();requestAnimationFrame(loop)}
-function draw(){x.clearRect(0,0,800,500);x.fillStyle='#3b82f6';x.beginPath();x.arc(p?.x||400,p?.y||250,14,0,7);x.fill();x.fillStyle='#ef4444';o?.forEach(q=>{x.beginPath();x.arc(q.x,q.y,q.r,0,7);x.fill()})}draw();
-</script></body></html>
+
+let clicks=0;
+let time=10;
+let running=false;
+let timer;
+
+
+const button=document.getElementById("click");
+
+
+button.onclick=()=>{
+
+if(running){
+
+clicks++;
+
+document.getElementById("score").innerHTML=clicks;
+
+}
+
+};
+
+
+
+function start(){
+
+clicks=0;
+time=10;
+running=true;
+
+
+document.getElementById("score").innerHTML=0;
+document.getElementById("time").innerHTML=10;
+document.getElementById("cps").innerHTML=0;
+document.getElementById("msg").innerHTML="";
+
+
+clearInterval(timer);
+
+
+timer=setInterval(()=>{
+
+time--;
+
+document.getElementById("time").innerHTML=time;
+
+
+if(time<=0){
+
+running=false;
+
+clearInterval(timer);
+
+
+let cps=(clicks/10).toFixed(1);
+
+
+document.getElementById("cps").innerHTML=cps;
+
+document.getElementById("msg").innerHTML=
+"🔥 Finished! "+cps+" clicks per second";
+
+}
+
+
+},1000);
+
+}
+
+</script>
+
+</body>
+</html>
