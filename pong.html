@@ -6,24 +6,29 @@
 
 <style>
 body{
-  margin:0;
-  background:#000;
-  color:white;
-  text-align:center;
-  font-family:Arial;
+margin:0;
+background:#000;
+color:white;
+text-align:center;
+font-family:Arial;
 }
 
 canvas{
-  display:block;
-  margin:auto;
+display:block;
+margin:auto;
+border:2px solid white;
 }
 
 button{
-  padding:8px 15px;
-  margin:5px;
-  border-radius:8px;
-  border:0;
-  cursor:pointer;
+padding:8px 15px;
+margin:5px;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+}
+
+#score{
+font-size:28px;
 }
 </style>
 
@@ -31,15 +36,23 @@ button{
 
 <body>
 
-<h2>Pong</h2>
+<h2>🏓 Pong</h2>
 
-<button onclick="difficulty='easy'">Easy</button>
-<button onclick="difficulty='medium'">Medium</button>
-<button onclick="difficulty='hard'">Hard</button>
+<div>
+Speed:
+<button onclick="setSpeed(3)">🐢 Slow</button>
+<button onclick="setSpeed(5)">⚡ Normal</button>
+<button onclick="setSpeed(7)">🔥 Fast</button>
+<button onclick="setSpeed(10)">💀 Insane</button>
+</div>
 
-<p>Difficulty: <span id="diff">Medium</span></p>
+<div id="score">
+Player 0 - 0 AI
+</div>
 
 <canvas id="c" width="700" height="450"></canvas>
+
+<h3 id="message"></h3>
 
 
 <script>
@@ -47,54 +60,92 @@ button{
 const canvas=document.getElementById("c");
 const x=canvas.getContext("2d");
 
+
 let py=180;
 let ay=180;
 
-let difficulty="medium";
-
 let up=false;
 let down=false;
+
+let playerScore=0;
+let aiScore=0;
+
+let speed=5;
 
 
 let b={
 x:350,
 y:225,
-vx:5,
+vx:speed,
 vy:3
 };
+
+
+function setSpeed(s){
+
+speed=s;
+
+b.vx=b.vx>0 ? speed : -speed;
+
+}
 
 
 // controls
 
 onkeydown=e=>{
-if(e.key==="ArrowUp") up=true;
-if(e.key==="ArrowDown") down=true;
+
+if(e.key==="ArrowUp")
+up=true;
+
+if(e.key==="ArrowDown")
+down=true;
+
 };
 
 
 onkeyup=e=>{
-if(e.key==="ArrowUp") up=false;
-if(e.key==="ArrowDown") down=false;
+
+if(e.key==="ArrowUp")
+up=false;
+
+if(e.key==="ArrowDown")
+down=false;
+
 };
 
 
-// game
 
-setInterval(()=>{
+function resetBall(){
+
+b={
+x:350,
+y:225,
+vx:b.vx>0?speed:-speed,
+vy:3
+};
+
+}
 
 
-document.getElementById("diff").innerHTML=
-difficulty;
+
+function update(){
 
 
 // player
 
-if(up) py-=8;
-if(down) py+=8;
+if(up)
+py-=8;
+
+if(down)
+py+=8;
 
 
-if(py<0) py=0;
-if(py>360) py=360;
+if(py<0)
+py=0;
+
+if(py>360)
+py=360;
+
 
 
 // ball
@@ -103,9 +154,11 @@ b.x+=b.vx;
 b.y+=b.vy;
 
 
-if(b.y<0||b.y>450){
+// walls
+
+if(b.y<0 || b.y>450)
 b.vy*=-1;
-}
+
 
 
 // player hit
@@ -115,28 +168,17 @@ b.x<35 &&
 b.y>py &&
 b.y<py+90
 ){
+
 b.vx=Math.abs(b.vx);
+
 }
 
 
-// AI difficulty
 
-let aiSpeed;
+// AI
 
-if(difficulty==="easy"){
-aiSpeed=.04;
-}
+ay+=(b.y-ay-45)*.08;
 
-if(difficulty==="medium"){
-aiSpeed=.08;
-}
-
-if(difficulty==="hard"){
-aiSpeed=.14;
-}
-
-
-ay += (b.y-ay-45)*aiSpeed;
 
 
 // AI hit
@@ -146,33 +188,73 @@ b.x>665 &&
 b.y>ay &&
 b.y<ay+90
 ){
+
 b.vx=-Math.abs(b.vx);
-}
-
-
-// reset
-
-if(b.x<0||b.x>700){
-
-b={
-x:350,
-y:225,
-vx:b.x<0?5:-5,
-vy:3
-};
 
 }
 
 
-// draw
+
+// score
+
+if(b.x<0){
+
+aiScore++;
+resetBall();
+
+}
+
+
+if(b.x>700){
+
+playerScore++;
+resetBall();
+
+}
+
+
+// win
+
+if(playerScore>=10){
+
+document.getElementById("message").innerHTML=
+"🔥 You Win!";
+
+return;
+
+}
+
+
+if(aiScore>=10){
+
+document.getElementById("message").innerHTML=
+"💀 AI Wins!";
+
+return;
+
+}
+
+
+
+draw();
+
+requestAnimationFrame(update);
+
+}
+
+
+
+function draw(){
 
 x.clearRect(0,0,700,450);
 
 x.fillStyle="white";
 
+
 x.fillRect(20,py,15,90);
 
 x.fillRect(665,ay,15,90);
+
 
 x.fillRect(
 b.x-7,
@@ -182,7 +264,13 @@ b.y-7,
 );
 
 
-},16);
+document.getElementById("score").innerHTML=
+"Player "+playerScore+" - "+aiScore+" AI";
+
+}
+
+
+update();
 
 
 </script>
