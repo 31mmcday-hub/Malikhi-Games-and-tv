@@ -8,8 +8,8 @@
 body{
   margin:0;
   background:#000;
+  color:white;
   text-align:center;
-  color:#fff;
   font-family:Arial;
 }
 
@@ -17,136 +17,149 @@ canvas{
   display:block;
   margin:auto;
 }
+
+button{
+  padding:8px 15px;
+  margin:5px;
+  border-radius:8px;
+  border:0;
+  cursor:pointer;
+}
 </style>
 
 </head>
 
 <body>
 
-<h2>Pong — Arrow Keys</h2>
+<h2>Pong</h2>
+
+<button onclick="difficulty='easy'">Easy</button>
+<button onclick="difficulty='medium'">Medium</button>
+<button onclick="difficulty='hard'">Hard</button>
+
+<p>Difficulty: <span id="diff">Medium</span></p>
 
 <canvas id="c" width="700" height="450"></canvas>
 
+
 <script>
 
-const canvas = document.getElementById("c");
-const x = canvas.getContext("2d");
+const canvas=document.getElementById("c");
+const x=canvas.getContext("2d");
 
-let py = 180;
-let ay = 180;
+let py=180;
+let ay=180;
 
-let up = false;
-let down = false;
+let difficulty="medium";
 
-let b = {
-  x:350,
-  y:225,
-  vx:5,
-  vy:3
+let up=false;
+let down=false;
+
+
+let b={
+x:350,
+y:225,
+vx:5,
+vy:3
 };
 
 
-// Arrow controls
+// controls
 
-onkeydown = e => {
-
-  if(e.key === "ArrowUp"){
-    up = true;
-  }
-
-  if(e.key === "ArrowDown"){
-    down = true;
-  }
-
+onkeydown=e=>{
+if(e.key==="ArrowUp") up=true;
+if(e.key==="ArrowDown") down=true;
 };
 
 
-onkeyup = e => {
-
-  if(e.key === "ArrowUp"){
-    up = false;
-  }
-
-  if(e.key === "ArrowDown"){
-    down = false;
-  }
-
+onkeyup=e=>{
+if(e.key==="ArrowUp") up=false;
+if(e.key==="ArrowDown") down=false;
 };
 
+
+// game
 
 setInterval(()=>{
 
 
-// player movement
-
-if(up){
-  py -= 8;
-}
-
-if(down){
-  py += 8;
-}
+document.getElementById("diff").innerHTML=
+difficulty;
 
 
-// keep player on screen
+// player
 
-if(py < 0){
-  py = 0;
-}
+if(up) py-=8;
+if(down) py+=8;
 
-if(py > 360){
-  py = 360;
-}
+
+if(py<0) py=0;
+if(py>360) py=360;
 
 
 // ball
 
-b.x += b.vx;
-b.y += b.vy;
+b.x+=b.vx;
+b.y+=b.vy;
 
 
-// top/bottom bounce
-
-if(b.y < 0 || b.y > 450){
-  b.vy *= -1;
+if(b.y<0||b.y>450){
+b.vy*=-1;
 }
 
 
-// paddle hits
+// player hit
 
 if(
-  b.x < 35 &&
-  b.y > py &&
-  b.y < py+90
+b.x<35 &&
+b.y>py &&
+b.y<py+90
 ){
-  b.vx = Math.abs(b.vx);
+b.vx=Math.abs(b.vx);
 }
 
+
+// AI difficulty
+
+let aiSpeed;
+
+if(difficulty==="easy"){
+aiSpeed=.04;
+}
+
+if(difficulty==="medium"){
+aiSpeed=.08;
+}
+
+if(difficulty==="hard"){
+aiSpeed=.14;
+}
+
+
+ay += (b.y-ay-45)*aiSpeed;
+
+
+// AI hit
 
 if(
-  b.x > 665 &&
-  b.y > ay &&
-  b.y < ay+90
+b.x>665 &&
+b.y>ay &&
+b.y<ay+90
 ){
-  b.vx = -Math.abs(b.vx);
+b.vx=-Math.abs(b.vx);
 }
 
 
-// AI
+// reset
 
-ay += (b.y-ay-45)*.08;
+if(b.x<0||b.x>700){
 
-
-// reset ball
-
-if(b.x < 0 || b.x > 700){
-
-  b = {
-    x:350,
-    y:225,
-    vx:b.x < 0 ? 5 : -5,
-    vy:3
-  };
+b={
+x:350,
+y:225,
+vx:b.x<0?5:-5,
+vy:3
+};
 
 }
 
@@ -155,21 +168,22 @@ if(b.x < 0 || b.x > 700){
 
 x.clearRect(0,0,700,450);
 
-x.fillStyle="#fff";
+x.fillStyle="white";
 
 x.fillRect(20,py,15,90);
 
 x.fillRect(665,ay,15,90);
 
 x.fillRect(
-  b.x-7,
-  b.y-7,
-  14,
-  14
+b.x-7,
+b.y-7,
+14,
+14
 );
 
 
 },16);
+
 
 </script>
 
