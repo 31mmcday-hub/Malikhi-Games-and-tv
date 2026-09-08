@@ -1,45 +1,50 @@
 <!doctype html>
 <html>
 <head>
-<title>Doodle Jump</title>
+<title>Word Rush - Malikhi Games</title>
 
 <style>
 body{
 margin:0;
 background:#111827;
 color:white;
-text-align:center;
 font-family:Arial;
+text-align:center;
 }
 
 canvas{
-background:#87ceeb;
+background:#020617;
+border:3px solid white;
 display:block;
 margin:auto;
-border:3px solid white;
 }
 
-button{
-padding:10px 20px;
+input{
+font-size:22px;
+padding:10px;
 border-radius:10px;
-border:0;
-font-weight:bold;
+margin:10px;
 }
+
 </style>
 
 </head>
 
 <body>
 
-<h1>🦘 Doodle Jump</h1>
+<h1>💨 Word Rush</h1>
 
-<p>⬅️ ➡️ Move</p>
+<h2>
+Score: <span id="score">0</span>
+|
+Time: <span id="time">60</span>
+</h2>
 
-<h2>Score: <span id="score">0</span></h2>
+<canvas id="game" width="500" height="500"></canvas>
 
-<canvas id="game" width="400" height="600"></canvas>
+<input id="input" placeholder="Type word">
 
-<button onclick="restart()">Restart</button>
+<h2 id="msg"></h2>
 
 
 <script>
@@ -47,163 +52,105 @@ font-weight:bold;
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 
-let player;
-let platforms=[];
-let keys={};
+const input=document.getElementById("input");
+
+let words=[];
 let score=0;
+let time=60;
+let speed=1;
 
 
-document.addEventListener("keydown",e=>{
-keys[e.key]=true;
-});
+let wordList=[
+"fire",
+"jump",
+"game",
+"power",
+"speed",
+"dragon",
+"robot",
+"ninja",
+"pizza",
+"football",
+"computer",
+"minecraft",
+"castle",
+"rocket",
+"monster",
+"shadow",
+"storm",
+"laser"
+];
 
 
-document.addEventListener("keyup",e=>{
-keys[e.key]=false;
-});
+function newWord(){
 
+words.push({
 
-function restart(){
+text:
+wordList[Math.floor(Math.random()*wordList.length)],
 
-player={
-x:180,
-y:450,
-w:30,
-h:30,
-dy:0
-};
+x:
+Math.random()*350,
 
-platforms=[];
+y:0
 
-for(let i=0;i<10;i++){
-
-platforms.push({
-x:Math.random()*330,
-y:550-i*70,
-w:70,
-h:10
 });
 
 }
 
-score=0;
-document.getElementById("score").innerHTML=0;
+
+
+input.addEventListener("input",()=>{
+
+let typed=input.value.toLowerCase();
+
+words.forEach((w,i)=>{
+
+if(w.text===typed){
+
+words.splice(i,1);
+
+score++;
+
+speed+=0.03;
+
+document.getElementById("score").innerHTML=score;
+
+input.value="";
 
 }
+
+});
+
+});
+
 
 
 function update(){
 
 
-// controls
+words.forEach(w=>{
 
-if(keys["ArrowLeft"]){
-player.x-=4;
-}
-
-if(keys["ArrowRight"]){
-player.x+=4;
-}
+w.y+=speed;
 
 
-// wrap
+if(w.y>500){
 
-if(player.x>400)
-player.x=0;
-
-if(player.x<0)
-player.x=400;
-
-
-// gravity
-
-player.dy+=0.25;
-player.y+=player.dy;
-
-
-
-// landing
-
-platforms.forEach(p=>{
-
-if(
-player.x+player.w>p.x &&
-player.x<p.x+p.w &&
-player.y+player.h>=p.y &&
-player.y+player.h<=p.y+10 &&
-player.dy>0
-){
-
-player.dy=-9;
-
-score++;
-
-document.getElementById("score").innerHTML=score;
+words.splice(words.indexOf(w),1);
 
 }
 
 });
 
 
+if(Math.random()<0.02){
 
-// camera
-
-if(player.y<250){
-
-let move=250-player.y;
-
-player.y=250;
-
-platforms.forEach(p=>{
-p.y+=move;
-});
+newWord();
 
 }
 
 
-
-// delete old
-
-platforms=platforms.filter(p=>p.y<600);
-
-
-
-// add new forever
-
-while(platforms.length<10){
-
-let highest=0;
-
-platforms.forEach(p=>{
-if(p.y<highest)
-highest=p.y;
-});
-
-platforms.push({
-
-x:Math.random()*330,
-
-y:highest-80,
-
-w:70,
-
-h:10
-
-});
-
-}
-
-
-
-// game over
-
-if(player.y>600){
-
-alert("Game Over! Score: "+score);
-
-restart();
-
-}
+draw();
 
 }
 
@@ -211,32 +158,19 @@ restart();
 
 function draw(){
 
-ctx.clearRect(0,0,400,600);
+ctx.clearRect(0,0,500,500);
+
+ctx.font="25px Arial";
+
+ctx.fillStyle="white";
 
 
-// player
+words.forEach(w=>{
 
-ctx.fillStyle="green";
-
-ctx.fillRect(
-player.x,
-player.y,
-player.w,
-player.h
-);
-
-
-// platforms
-
-ctx.fillStyle="brown";
-
-platforms.forEach(p=>{
-
-ctx.fillRect(
-p.x,
-p.y,
-p.w,
-p.h
+ctx.fillText(
+w.text,
+w.x,
+w.y
 );
 
 });
@@ -245,19 +179,29 @@ p.h
 
 
 
-function loop(){
+let game=setInterval(update,20);
 
-update();
 
-draw();
 
-requestAnimationFrame(loop);
+let timer=setInterval(()=>{
+
+time--;
+
+document.getElementById("time").innerHTML=time;
+
+
+if(time<=0){
+
+clearInterval(timer);
+clearInterval(game);
+
+document.getElementById("msg").innerHTML=
+"🔥 Game Over! Score: "+score;
 
 }
 
+},1000);
 
-restart();
-loop();
 
 </script>
 
