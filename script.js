@@ -1,4 +1,5 @@
 const games = [
+  // Existing games
   {id:"2048",name:"2048",desc:"Classic number puzzle",emoji:"🔢",url:"2048.html"},
   {id:"archery",name:"Archery",desc:"Hit the target",emoji:"🏹",url:"archery_game_improved.html"},
   {id:"asteroids",name:"Asteroids",desc:"Destroy the rocks",emoji:"☄️",url:"asteroids.html"},
@@ -11,7 +12,6 @@ const games = [
   {id:"maze",name:"Maze",desc:"Find your way out",emoji:"🌀",url:"maze.html"},
   {id:"memory",name:"Memory Match",desc:"Match the pairs",emoji:"🧠",url:"memory.html"},
   {id:"minesweeper",name:"Minesweeper",desc:"Find the mines",emoji:"💣",url:"minesweeper.html"},
-  {id:"mini-rpg",name:"Mini RPG",desc:"Battle and explore",emoji:"⚔️",url:"mini_rpg_improved (1).html"},
   {id:"neon-runner",name:"Neon Runner",desc:"Run and survive",emoji:"🌈",url:"neon-runner.html"},
   {id:"pong",name:"Pong",desc:"Classic arcade game",emoji:"🏓",url:"pong.html"},
   {id:"reaction-dodge",name:"Reaction Dodge",desc:"Test your reactions",emoji:"⚡",url:"reaction-dodge.html"},
@@ -19,320 +19,132 @@ const games = [
   {id:"sokoban",name:"Sokoban",desc:"Push the boxes",emoji:"📦",url:"sokoban.html"},
   {id:"tetris",name:"Tetris",desc:"Block-stacking classic",emoji:"🧱",url:"tetris.html"},
   {id:"typing",name:"Typing Race",desc:"Test your typing speed",emoji:"⌨️",url:"typing.html"},
+  {id:"mini-rpg",name:"Mini RPG",desc:"Battle and explore",emoji:"⚔️",url:"mini_rpg_improved (1).html"},
 
-  {id:"driving",name:"Driving Game",desc:"Dodge traffic and beat your high score",emoji:"🏎️",url:"driving-game.html"},
-  {id:"reaction-test",name:"Reaction Test",desc:"Test how fast you are",emoji:"⚡",url:"reaction-test.html"},
-  {id:"click-speed",name:"Click Speed",desc:"Click as fast as you can",emoji:"🖱️",url:"click-speed.html"},
-  {id:"guess-number",name:"Guess the Number",desc:"Guess the secret number",emoji:"🔢",url:"guess-number.html"},
-  {id:"rock-paper-scissors",name:"Rock Paper Scissors",desc:"Beat the computer",emoji:"✊",url:"rock-paper-scissors.html"},
-  {id:"coin-flip",name:"Coin Flip",desc:"Heads or tails?",emoji:"🪙",url:"coin-flip.html"},
-  {id:"dice-roll",name:"Dice Roll",desc:"Roll the dice",emoji:"🎲",url:"dice-roll.html"},
-  {id:"high-low",name:"High or Low",desc:"Guess the next number",emoji:"📈",url:"high-low.html"},
-  {id:"math-blaster",name:"Math Blaster",desc:"Solve quick math problems",emoji:"➕",url:"math-blaster.html"},
-  {id:"color-match",name:"Color Match",desc:"Match the target color",emoji:"🎨",url:"color-match.html"},
-  {id:"whack-a-box",name:"Whack-a-Box",desc:"Hit the moving box",emoji:"🟦",url:"whack-a-box.html"},
-  {id:"avoid-boxes",name:"Avoid the Boxes",desc:"Survive as long as possible",emoji:"💨",url:"avoid-boxes.html"},
-  {id:"dot-chaser",name:"Dot Chaser",desc:"Catch the moving dot",emoji:"🔴",url:"dot-chaser.html"},
-  {id:"line-rider-mini",name:"Line Rider Mini",desc:"Draw your own track",emoji:"✏️",url:"line-rider-mini.html"},
-  {id:"tic-tac-toe",name:"Tic Tac Toe",desc:"Play against the computer",emoji:"❌",url:"tic-tac-toe.html"},
-  {id:"connect-four-mini",name:"Connect Four Mini",desc:"Get four in a row",emoji:"🔴",url:"connect-four-mini.html"},
-  {id:"lights-out",name:"Lights Out",desc:"Turn every light off",emoji:"💡",url:"lights-out.html"},
-  {id:"memory-mini",name:"Memory Mini",desc:"Match the pairs",emoji:"🧠",url:"memory-mini.html"},
-  {id:"hangman-mini",name:"Hangman Mini",desc:"Guess the hidden word",emoji:"🔤",url:"hangman-mini.html"},
-  {id:"typing-test",name:"Typing Test",desc:"Test your typing speed",emoji:"⌨️",url:"typing-test.html"},
-  {id:"space-dodge",name:"Space Dodge",desc:"Dodge falling meteors",emoji:"🚀",url:"space-dodge.html"},
+  // New games
+  {id:"pacman-mini",name:"Pac-Man Mini",desc:"Eat dots and avoid the ghosts",emoji:"👻",url:"pacman-mini.html"},
+  {id:"space-invaders",name:"Space Invaders",desc:"Blast the incoming aliens",emoji:"👾",url:"space-invaders.html"},
+  {id:"pong-2",name:"Pong 2",desc:"Classic paddle battle",emoji:"🏓",url:"pong-2.html"},
+  {id:"helicopter",name:"Helicopter",desc:"Fly through the obstacles",emoji:"🚁",url:"helicopter.html"},
+  {id:"frogger",name:"Frogger",desc:"Cross the road safely",emoji:"🐸",url:"frogger.html"},
+  {id:"missile-command",name:"Missile Command",desc:"Defend your base",emoji:"🚀",url:"missile-command.html"},
+  {id:"bomberman-mini",name:"Bomberman Mini",desc:"Place bombs and survive",emoji:"💣",url:"bomberman-mini.html"},
+  {id:"doodle-jump",name:"Doodle Jump",desc:"Jump higher and higher",emoji:"🦘",url:"doodle-jump.html"},
+  {id:"flappy-bird-mini",name:"Flappy Bird Mini",desc:"Keep flying",emoji:"🐦",url:"flappy-bird-mini.html"},
+  {id:"snake-2",name:"Snake 2",desc:"Grow the snake",emoji:"🐍",url:"snake-2.html"},
+  {id:"breakout-2",name:"Breakout 2",desc:"Clear the bricks",emoji:"🧱",url:"breakout-2.html"},
+  {id:"space-racer",name:"Space Racer",desc:"Dodge ships at top speed",emoji:"🚀",url:"space-racer.html"},
+  {id:"car-dodge",name:"Car Dodge",desc:"Avoid the traffic",emoji:"🚗",url:"car-dodge.html"},
+  {id:"road-cross",name:"Road Cross",desc:"Cross without getting hit",emoji:"🚦",url:"road-cross.html"},
+  {id:"tower-defense-mini",name:"Tower Defense Mini",desc:"Stop the enemies",emoji:"🏰",url:"tower-defense-mini.html"},
+  {id:"castle-run",name:"Castle Run",desc:"Escape the castle",emoji:"🏃",url:"castle-run.html"},
+  {id:"ninja-run",name:"Ninja Run",desc:"Jump and dodge",emoji:"🥷",url:"ninja-run.html"},
+  {id:"zombie-dodge",name:"Zombie Dodge",desc:"Survive the zombies",emoji:"🧟",url:"zombie-dodge.html"},
+  {id:"alien-dodge",name:"Alien Dodge",desc:"Dodge alien attacks",emoji:"👽",url:"alien-dodge.html"},
+  {id:"meteor-shower",name:"Meteor Shower",desc:"Survive the falling meteors",emoji:"☄️",url:"meteor-shower.html"},
+  {id:"laser-dodge",name:"Laser Dodge",desc:"Avoid the laser beams",emoji:"🔴",url:"laser-dodge.html"},
+  {id:"orb-catcher",name:"Orb Catcher",desc:"Catch as many orbs as possible",emoji:"🔮",url:"orb-catcher.html"},
+  {id:"gold-rush",name:"Gold Rush",desc:"Grab the gold",emoji:"💰",url:"gold-rush.html"},
+  {id:"gem-hunter",name:"Gem Hunter",desc:"Collect the gems",emoji:"💎",url:"gem-hunter.html"},
+  {id:"treasure-hunt",name:"Treasure Hunt",desc:"Find the hidden treasure",emoji:"🗺️",url:"treasure-hunt.html"},
+  {id:"quick-draw",name:"Quick Draw",desc:"React before time runs out",emoji:"🤠",url:"quick-draw.html"},
+  {id:"reaction-red",name:"Red Light",desc:"Stop when the signal changes",emoji:"🛑",url:"reaction-red.html"},
+  {id:"button-smash",name:"Button Smash",desc:"Mash the button",emoji:"🔘",url:"button-smash.html"},
+  {id:"target-click",name:"Target Click",desc:"Hit targets quickly",emoji:"🎯",url:"target-click.html"},
+  {id:"word-guess",name:"Word Guess",desc:"Guess the mystery word",emoji:"🔤",url:"word-guess.html"},
+  {id:"number-rush",name:"Number Rush",desc:"Solve numbers before time",emoji:"🔢",url:"number-rush.html"},
+  {id:"math-race",name:"Math Race",desc:"Answer fast to win",emoji:"➗",url:"math-race.html"},
+  {id:"color-rush",name:"Color Rush",desc:"Match colors quickly",emoji:"🌈",url:"color-rush.html"},
+  {id:"pattern-memory",name:"Pattern Memory",desc:"Remember the pattern",emoji:"🧠",url:"pattern-memory.html"},
+  {id:"sequence",name:"Sequence",desc:"Repeat the sequence",emoji:"🔢",url:"sequence.html"},
+  {id:"four-in-row",name:"Four In A Row",desc:"Connect four",emoji:"🔴",url:"four-in-row.html"},
+  {id:"checkers-mini",name:"Checkers Mini",desc:"Play checkers",emoji:"⚫",url:"checkers-mini.html"},
+  {id:"solitaire-mini",name:"Solitaire Mini",desc:"Classic card puzzle",emoji:"🃏",url:"solitaire-mini.html"},
+  {id:"card-match",name:"Card Match",desc:"Find matching cards",emoji:"🂡",url:"card-match.html"},
+  {id:"simon-mini",name:"Simon Mini",desc:"Copy the lights",emoji:"🟢",url:"simon-mini.html"},
+  {id:"lights-out-2",name:"Lights Out 2",desc:"Turn off every light",emoji:"💡",url:"lights-out-2.html"},
+  {id:"maze-2",name:"Maze 2",desc:"Escape the maze",emoji:"🌀",url:"maze-2.html"},
+  {id:"tilt-maze",name:"Tilt Maze",desc:"Guide the ball",emoji:"⚪",url:"tilt-maze.html"},
+  {id:"box-push",name:"Box Push",desc:"Push boxes into place",emoji:"📦",url:"box-push.html"},
+  {id:"ice-slide",name:"Ice Slide",desc:"Slide to the goal",emoji:"🧊",url:"ice-slide.html"},
+  {id:"platform-run",name:"Platform Run",desc:"Jump across platforms",emoji:"🏃",url:"platform-run.html"},
+  {id:"wall-jumper",name:"Wall Jumper",desc:"Climb the walls",emoji:"🧗",url:"wall-jumper.html"},
+  {id:"jump-over",name:"Jump Over",desc:"Jump over obstacles",emoji:"⬆️",url:"jump-over.html"},
+  {id:"rocket-launch",name:"Rocket Launch",desc:"Launch as high as possible",emoji:"🚀",url:"rocket-launch.html"},
+  {id:"moon-lander",name:"Moon Lander",desc:"Land safely",emoji:"🌙",url:"moon-lander.html"},
+  {id:"cannon-shot",name:"Cannon Shot",desc:"Hit the targets",emoji:"💥",url:"cannon-shot.html"},
+  {id:"bowling",name:"Bowling",desc:"Knock down the pins",emoji:"🎳",url:"bowling.html"},
+  {id:"basketball",name:"Basketball",desc:"Make the shot",emoji:"🏀",url:"basketball.html"},
+  {id:"soccer-shot",name:"Soccer Shot",desc:"Score the goal",emoji:"⚽",url:"soccer-shot.html"},
+  {id:"football-kick",name:"Football Kick",desc:"Kick for distance",emoji:"🏈",url:"football-kick.html"},
+  {id:"hockey",name:"Hockey",desc:"Score on the goalie",emoji:"🏒",url:"hockey.html"},
+  {id:"golf-mini",name:"Golf Mini",desc:"Get it in the hole",emoji:"⛳",url:"golf-mini.html"},
+  {id:"baseball-hit",name:"Baseball Hit",desc:"Time your swing",emoji:"⚾",url:"baseball-hit.html"},
+  {id:"boxing-mini",name:"Boxing Mini",desc:"Land the punches",emoji:"🥊",url:"boxing-mini.html"},
+  {id:"fishing-mini",name:"Fishing Mini",desc:"Catch the fish",emoji:"🎣",url:"fishing-mini.html"},
+  {id:"apple-catch",name:"Apple Catch",desc:"Catch falling apples",emoji:"🍎",url:"apple-catch.html"},
+  {id:"fruit-catch",name:"Fruit Catch",desc:"Catch the fruit",emoji:"🍉",url:"fruit-catch.html"},
+  {id:"bubble-pop",name:"Bubble Pop",desc:"Pop the bubbles",emoji:"🫧",url:"bubble-pop.html"},
+  {id:"brick-stack",name:"Brick Stack",desc:"Stack as high as you can",emoji:"🧱",url:"brick-stack.html"},
+  {id:"balance",name:"Balance",desc:"Keep the platform balanced",emoji:"⚖️",url:"balance.html"},
+  {id:"endless-climber",name:"Endless Climber",desc:"Climb forever",emoji:"🧗",url:"endless-climber.html"},
+  {id:"sky-jump",name:"Sky Jump",desc:"Reach the sky",emoji:"☁️",url:"sky-jump.html"},
+  {id:"lava-run",name:"Lava Run",desc:"Don't touch the lava",emoji:"🌋",url:"lava-run.html"},
+  {id:"fireball-dodge",name:"Fireball Dodge",desc:"Dodge fireballs",emoji:"🔥",url:"fireball-dodge.html"},
+  {id:"ice-dodge",name:"Ice Dodge",desc:"Avoid falling ice",emoji:"❄️",url:"ice-dodge.html"},
+  {id:"electric-dodge",name:"Electric Dodge",desc:"Avoid the sparks",emoji:"⚡",url:"electric-dodge.html"},
+  {id:"shadow-run",name:"Shadow Run",desc:"Run through the darkness",emoji:"🌑",url:"shadow-run.html"},
+  {id:"cyber-run",name:"Cyber Run",desc:"Survive the neon city",emoji:"🤖",url:"cyber-run.html"},
+  {id:"pixel-shooter",name:"Pixel Shooter",desc:"Shoot the targets",emoji:"🔫",url:"pixel-shooter.html"},
+  {id:"tank-battle-mini",name:"Tank Battle Mini",desc:"Destroy enemy tanks",emoji:"🛡️",url:"tank-battle-mini.html"},
+  {id:"cannon-defense",name:"Cannon Defense",desc:"Defend the castle",emoji:"🏯",url:"cannon-defense.html"},
+  {id:"robot-attack",name:"Robot Attack",desc:"Stop the robots",emoji:"🤖",url:"robot-attack.html"},
+  {id:"monster-dodge",name:"Monster Dodge",desc:"Stay alive",emoji:"👹",url:"monster-dodge.html"},
+  {id:"vampire-dodge",name:"Vampire Dodge",desc:"Avoid the monsters",emoji:"🧛",url:"vampire-dodge.html"},
+  {id:"dragon-dodge",name:"Dragon Dodge",desc:"Escape the dragon",emoji:"🐉",url:"dragon-dodge.html"},
+  {id:"wizard-dodge",name:"Wizard Dodge",desc:"Avoid magic attacks",emoji:"🧙",url:"wizard-dodge.html"},
+  {id:"ninja-slice",name:"Ninja Slice",desc:"Slice the targets",emoji:"🥷",url:"ninja-slice.html"},
+  {id:"sword-master",name:"Sword Master",desc:"Hit the targets",emoji:"⚔️",url:"sword-master.html"},
+  {id:"arrow-dodge",name:"Arrow Dodge",desc:"Avoid incoming arrows",emoji:"🏹",url:"arrow-dodge.html"},
+  {id:"coin-catcher",name:"Coin Catcher",desc:"Catch falling coins",emoji:"🪙",url:"coin-catcher.html"},
+  {id:"star-catcher",name:"Star Catcher",desc:"Grab the stars",emoji:"⭐",url:"star-catcher.html"},
+  {id:"heart-catcher",name:"Heart Catcher",desc:"Catch the hearts",emoji:"❤️",url:"heart-catcher.html"},
+  {id:"rain-catcher",name:"Rain Catcher",desc:"Catch the drops",emoji:"🌧️",url:"rain-catcher.html"},
+  {id:"snow-catcher",name:"Snow Catcher",desc:"Catch snowflakes",emoji:"❄️",url:"snow-catcher.html"},
+  {id:"typing-blitz",name:"Typing Blitz",desc:"Type before time runs out",emoji:"⌨️",url:"typing-blitz.html"},
+  {id:"word-rush",name:"Word Rush",desc:"Type words quickly",emoji:"💨",url:"word-rush.html"},
+  {id:"memory-flip",name:"Memory Flip",desc:"Flip and match cards",emoji:"🧠",url:"memory-flip.html"},
+  {id:"quick-count",name:"Quick Count",desc:"Count the shapes",emoji:"🔢",url:"quick-count.html"},
+  {id:"odd-one-out",name:"Odd One Out",desc:"Find the different one",emoji:"👀",url:"odd-one-out.html"},
+  {id:"spot-the-dot",name:"Spot The Dot",desc:"Find the target dot",emoji:"🔴",url:"spot-the-dot.html"},
+  {id:"tap-timing",name:"Tap Timing",desc:"Tap at the perfect moment",emoji:"⏱️",url:"tap-timing.html"},
+  {id:"stopwatch",name:"Stopwatch",desc:"Stop the timer on target",emoji:"⏱️",url:"stopwatch.html"},
+  {id:"high-score",name:"High Score",desc:"Beat your best score",emoji:"🏆",url:"high-score.html"},
+  {id:"mini-golf-2",name:"Mini Golf 2",desc:"Sink the putt",emoji:"⛳",url:"mini-golf-2.html"},
 
+  // External games
   {id:"chess",name:"Chess",desc:"Play chess online",emoji:"♟️",url:"https://www.chess.com/play/online"},
   {id:"agar",name:"Agar.io",desc:"Grow and survive",emoji:"🟢",url:"https://agar.io/"},
   {id:"krunker",name:"Krunker",desc:"Browser FPS",emoji:"🎯",url:"https://krunker.io/"},
   {id:"tetris-online",name:"Tetris Online",desc:"Play Tetris online",emoji:"🧱",url:"https://tetris.com/play-tetris"},
-
   {id:"snapchat",name:"Snapchat",desc:"Open Snapchat",emoji:"👻",url:"https://www.snapchat.com/"},
-  {id:"tiktok",name:"TikTok",desc:"Open TikTok",emoji:"🎵",url:"https://www.tiktok.com/"},
-
-  {id:"target-shooter",name:"Target Shooter",desc:"Hit the targets",emoji:"🎯",url:"target-shooter.html"},
-  {id:"paddle-ball",name:"Paddle Ball",desc:"Keep the ball alive",emoji:"🏓",url:"paddle-ball.html"},
-  {id:"wall-jump",name:"Wall Jump",desc:"Jump higher and higher",emoji:"🧗",url:"wall-jump.html"},
-  {id:"traffic-racer",name:"Traffic Racer",desc:"Dodge the traffic",emoji:"🚦",url:"traffic-racer.html"},
-  {id:"space-shooter",name:"Space Shooter",desc:"Blast the aliens",emoji:"🚀",url:"space-shooter.html"},
-  {id:"zombie-survival",name:"Zombie Survival",desc:"Survive the wave",emoji:"🧟",url:"zombie-survival.html"},
-  {id:"frog-hop",name:"Frog Hop",desc:"Cross the road safely",emoji:"🐸",url:"frog-hop.html"},
-  {id:"bird-jump",name:"Bird Jump",desc:"Jump over obstacles",emoji:"🐦",url:"bird-jump.html"},
-  {id:"endless-runner",name:"Endless Runner",desc:"Run as far as you can",emoji:"🏃",url:"endless-runner.html"},
-  {id:"asteroid-dash",name:"Asteroid Dash",desc:"Dodge space rocks",emoji:"🛸",url:"asteroid-dash.html"},
-  {id:"sliding-puzzle",name:"Sliding Puzzle",desc:"Put the tiles in order",emoji:"🧩",url:"sliding-puzzle.html"},
-  {id:"connect-dots",name:"Connect Dots",desc:"Follow the number path",emoji:"🔴",url:"connect-dots.html"},
-  {id:"color-tap",name:"Color Tap",desc:"Tap the right color",emoji:"🟡",url:"color-tap.html"},
-  {id:"balloon-pop",name:"Balloon Pop",desc:"Pop as many balloons as possible",emoji:"🎈",url:"balloon-pop.html"},
-  {id:"basketball-shot",name:"Basketball Shot",desc:"Make the shot",emoji:"🏀",url:"basketball-shot.html"},
-  {id:"penalty-kick",name:"Penalty Kick",desc:"Score the goal",emoji:"⚽",url:"penalty-kick.html"},
-  {id:"punch-trainer",name:"Punch Trainer",desc:"Hit the targets fast",emoji:"🥊",url:"punch-trainer.html"},
-  {id:"ninja-dodge",name:"Ninja Dodge",desc:"Dodge incoming objects",emoji:"🥷",url:"ninja-dodge.html"},
-  {id:"drift-racer",name:"Drift Racer",desc:"Drift around the track",emoji:"🏎️",url:"drift-racer.html"},
-  {id:"train-dodge",name:"Train Dodge",desc:"Avoid the trains",emoji:"🚂",url:"train-dodge.html"},
-  {id:"skyfall",name:"Skyfall",desc:"Fall without hitting obstacles",emoji:"🪂",url:"skyfall.html"},
-  {id:"ice-breaker",name:"Ice Breaker",desc:"Break the ice blocks",emoji:"🧊",url:"ice-breaker.html"},
-  {id:"fire-dodge",name:"Fire Dodge",desc:"Avoid the flames",emoji:"🔥",url:"fire-dodge.html"},
-  {id:"water-runner",name:"Water Runner",desc:"Run across the water",emoji:"🌊",url:"water-runner.html"},
-  {id:"wizard-battle",name:"Wizard Battle",desc:"Cast spells and win",emoji:"🧙",url:"wizard-battle.html"},
-  {id:"monster-attack",name:"Monster Attack",desc:"Defend against monsters",emoji:"👹",url:"monster-attack.html"},
-  {id:"alien-blaster",name:"Alien Blaster",desc:"Defeat the alien invasion",emoji:"👾",url:"alien-blaster.html"},
-  {id:"castle-defense",name:"Castle Defense",desc:"Protect your castle",emoji:"🏰",url:"castle-defense.html"},
-  {id:"gem-match",name:"Gem Match",desc:"Match the gems",emoji:"💎",url:"gem-match.html"},
-  {id:"fruit-slice",name:"Fruit Slice",desc:"Slice the fruit",emoji:"🍉",url:"fruit-slice.html"},
-  {id:"fish-catch",name:"Fish Catch",desc:"Catch the falling fish",emoji:"🐟",url:"fish-catch.html"},
-  {id:"jump-master",name:"Jump Master",desc:"Time your jumps",emoji:"🦘",url:"jump-master.html"},
-  {id:"platform-jumper",name:"Platform Jumper",desc:"Climb the platforms",emoji:"🪜",url:"platform-jumper.html"},
-  {id:"bowling-mini",name:"Bowling Mini",desc:"Knock down the pins",emoji:"🎳",url:"bowling-mini.html"},
-  {id:"hockey-shot",name:"Hockey Shot",desc:"Shoot the puck",emoji:"🏒",url:"hockey-shot.html"},
-  {id:"time-trial",name:"Racing Time Trial",desc:"Beat the clock",emoji:"🏁",url:"time-trial.html"},
-  {id:"spinner",name:"Lucky Spinner",desc:"Spin for points",emoji:"🌀",url:"spinner.html"},
-  {id:"quick-memory",name:"Quick Memory",desc:"Remember the pattern",emoji:"🧠",url:"quick-memory.html"},
-  {id:"word-scramble",name:"Word Scramble",desc:"Unscramble the word",emoji:"🔤",url:"word-scramble.html"},
-  {id:"color-switch",name:"Color Switch",desc:"Tap when the color matches",emoji:"🌈",url:"color-switch.html"}
+  {id:"tiktok",name:"TikTok",desc:"Open TikTok",emoji:"🎵",url:"https://www.tiktok.com/"}
 ];
 
-let favorites = JSON.parse(
-  localStorage.getItem("malikhiFavorites") || "[]"
-);
-
-const grid = document.querySelector("#gameGrid");
-const favGrid = document.querySelector("#favoriteGrid");
-const count = document.querySelector("#count");
-const empty = document.querySelector("#empty");
-const favEmpty = document.querySelector("#favEmpty");
-
-function card(g) {
-  const liked = favorites.includes(g.id);
-
-  return `
-    <article class="game-card" data-name="${g.name.toLowerCase()}">
-      <button class="fav" data-fav="${g.id}" title="Favorite">
-        ${liked ? "★" : "☆"}
-      </button>
-
-      <div class="game-art">
-        ${document.body.classList.contains("noemoji") ? "🎮" : g.emoji}
-      </div>
-
-      <div class="game-info">
-        <b>${g.name}</b>
-        <span>${g.desc}</span>
-
-        <a class="play"
-           href="${g.url}"
-           target="_blank"
-           rel="noopener">
-          Play ↗
-        </a>
-      </div>
-    </article>
-  `;
-}
-
-function render(list = games) {
-  grid.innerHTML = list.map(card).join("");
-
-  count.textContent = `${list.length} games`;
-
-  empty.classList.toggle(
-    "hidden",
-    list.length !== 0
-  );
-}
-
-function renderFav() {
-  const list = games.filter(g =>
-    favorites.includes(g.id)
-  );
-
-  favGrid.innerHTML = list.map(card).join("");
-
-  favEmpty.classList.toggle(
-    "hidden",
-    list.length !== 0
-  );
-}
-
-function save() {
-  localStorage.setItem(
-    "malikhiFavorites",
-    JSON.stringify(favorites)
-  );
-}
-
-function toast(msg) {
-  const t = document.querySelector("#toast");
-
-  if (!t) return;
-
-  t.textContent = msg;
-  t.classList.add("show");
-
-  setTimeout(() => {
-    t.classList.remove("show");
-  }, 1400);
-}
-
-document.addEventListener("click", e => {
-
-  const nav = e.target.closest("[data-section]");
-
-  if (nav) {
-    document
-      .querySelectorAll(".nav-item")
-      .forEach(x => x.classList.remove("active"));
-
-    nav.classList.add("active");
-
-    document
-      .querySelectorAll(".section")
-      .forEach(x => x.classList.remove("active-section"));
-
-    const section = document.querySelector(
-      "#" + nav.dataset.section
-    );
-
-    if (section) {
-      section.classList.add("active-section");
-    }
-
-    if (nav.dataset.section === "favorites") {
-      renderFav();
-    }
-  }
-
-  const fav = e.target.closest("[data-fav]");
-
-  if (fav) {
-    const id = fav.dataset.fav;
-
-    favorites = favorites.includes(id)
-      ? favorites.filter(x => x !== id)
-      : [...favorites, id];
-
-    save();
-    render();
-    renderFav();
-
-    toast(
-      favorites.includes(id)
-        ? "Added to favorites ⭐"
-        : "Removed from favorites"
-    );
-  }
-});
-
-const search = document.querySelector("#search");
-
-if (search) {
-  search.addEventListener("input", e => {
-
-    const q = e.target.value
-      .toLowerCase()
-      .trim();
-
-    render(
-      games.filter(g =>
-        (g.name + " " + g.desc)
-          .toLowerCase()
-          .includes(q)
-      )
-    );
-  });
-}
-
-const randomBtn =
-  document.querySelector("#randomBtn");
-
-if (randomBtn) {
-  randomBtn.onclick = () => {
-
-    const g =
-      games[Math.floor(Math.random() * games.length)];
-
-    window.open(
-      g.url,
-      "_blank",
-      "noopener"
-    );
-
-    toast("Opening " + g.name + " 🎮");
-  };
-}
-
-const menuBtn =
-  document.querySelector("#menuBtn");
-
-if (menuBtn) {
-  menuBtn.onclick = () => {
-    document
-      .querySelector("#sidebar")
-      .classList.toggle("collapsed");
-  };
-}
-
-function setDark(dark) {
-
-  document.body.classList.toggle(
-    "light",
-    !dark
-  );
-
-  localStorage.setItem(
-    "dark",
-    dark ? "1" : "0"
-  );
-
-  const toggle =
-    document.querySelector("#darkToggle");
-
-  if (toggle) {
-    toggle.checked = dark;
-  }
-}
-
-const themeBtn =
-  document.querySelector("#themeBtn");
-
-if (themeBtn) {
-  themeBtn.onclick = () => {
-
-    const isLight =
-      document.body.classList.contains("light");
-
-    setDark(isLight);
-  };
-}
-
-const darkToggle =
-  document.querySelector("#darkToggle");
-
-if (darkToggle) {
-  darkToggle.onchange = e => {
-    setDark(e.target.checked);
-  };
-}
-
-const emojiToggle =
-  document.querySelector("#emojiToggle");
-
-if (emojiToggle) {
-  emojiToggle.onchange = e => {
-
-    document.body.classList.toggle(
-      "noemoji",
-      !e.target.checked
-    );
-
-    render();
-    renderFav();
-  };
-}
-
-if (localStorage.getItem("dark") === "0") {
-  setDark(false);
-}
-
-render();
-renderFav();
+let favorites=JSON.parse(localStorage.getItem("malikhiFavorites")||"[]");
+const grid=document.querySelector("#gameGrid"),favGrid=document.querySelector("#favoriteGrid"),count=document.querySelector("#count"),empty=document.querySelector("#empty"),favEmpty=document.querySelector("#favEmpty");
+function card(g){const liked=favorites.includes(g.id);return `<article class="game-card" data-name="${g.name.toLowerCase()}"><button class="fav" data-fav="${g.id}" title="Favorite">${liked?"★":"☆"}</button><div class="game-art">${document.body.classList.contains("noemoji")?"🎮":g.emoji}</div><div class="game-info"><b>${g.name}</b><span>${g.desc}</span><a class="play" href="${g.url}" target="_blank" rel="noopener">Play ↗</a></div></article>`}
+function render(list=games){grid.innerHTML=list.map(card).join("");count.textContent=`${list.length} games`;empty.classList.toggle("hidden",list.length!==0)}
+function renderFav(){const list=games.filter(g=>favorites.includes(g.id));favGrid.innerHTML=list.map(card).join("");favEmpty.classList.toggle("hidden",list.length!==0)}
+function save(){localStorage.setItem("malikhiFavorites",JSON.stringify(favorites))}
+function toast(msg){const t=document.querySelector("#toast");if(!t)return;t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1400)}
+document.addEventListener("click",e=>{const nav=e.target.closest("[data-section]");if(nav){document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active"));nav.classList.add("active");document.querySelectorAll(".section").forEach(x=>x.classList.remove("active-section"));const section=document.querySelector("#"+nav.dataset.section);if(section)section.classList.add("active-section");if(nav.dataset.section==="favorites")renderFav()}const fav=e.target.closest("[data-fav]");if(fav){const id=fav.dataset.fav;favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];save();render();renderFav();toast(favorites.includes(id)?"Added to favorites ⭐":"Removed from favorites")}});
+const search=document.querySelector("#search");if(search)search.addEventListener("input",e=>{const q=e.target.value.toLowerCase().trim();render(games.filter(g=>(g.name+" "+g.desc).toLowerCase().includes(q)))});
+const randomBtn=document.querySelector("#randomBtn");if(randomBtn)randomBtn.onclick=()=>{const g=games[Math.floor(Math.random()*games.length)];window.open(g.url,"_blank","noopener");toast("Opening "+g.name+" 🎮")};
+const menuBtn=document.querySelector("#menuBtn");if(menuBtn)menuBtn.onclick=()=>document.querySelector("#sidebar").classList.toggle("collapsed");
+function setDark(dark){document.body.classList.toggle("light",!dark);localStorage.setItem("dark",dark?"1":"0");const toggle=document.querySelector("#darkToggle");if(toggle)toggle.checked=dark}
+const themeBtn=document.querySelector("#themeBtn");if(themeBtn)themeBtn.onclick=()=>setDark(document.body.classList.contains("light"));
+const darkToggle=document.querySelector("#darkToggle");if(darkToggle)darkToggle.onchange=e=>setDark(e.target.checked);
+const emojiToggle=document.querySelector("#emojiToggle");if(emojiToggle)emojiToggle.onchange=e=>{document.body.classList.toggle("noemoji",!e.target.checked);render();renderFav()};
+if(localStorage.getItem("dark")==="0")setDark(false);
+render();renderFav();
