@@ -13,9 +13,16 @@ font-family:Arial;
 
 canvas{
 background:#22c55e;
-border:3px solid white;
+border:4px solid white;
 display:block;
 margin:auto;
+}
+
+button{
+padding:10px 20px;
+margin:8px;
+border-radius:10px;
+font-weight:bold;
 }
 </style>
 
@@ -25,16 +32,22 @@ margin:auto;
 
 <h1>⛳ Mini Golf</h1>
 
-<h2>Strokes: <span id="score">0</span></h2>
+<h2>
+Hole: <span id="holeNum">1</span>
+|
+Strokes: <span id="strokes">0</span>
+</h2>
+
+<canvas id="game" width="700" height="450"></canvas>
+
+<br>
+
+<button onclick="nextHole()">Next Hole</button>
 
 <p>
-🖱️ Mouse: Drag and release<br>
-⌨️ Keyboard: Arrows aim | Hold Space then release to shoot
+🖱️ Drag and release to shoot<br>
+⌨️ Arrow keys aim | Space shoots
 </p>
-
-<canvas id="game" width="600" height="400"></canvas>
-
-<h2 id="msg"></h2>
 
 
 <script>
@@ -43,69 +56,143 @@ const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 
 
-let ball={
-x:100,
-y:200,
-r:10,
-vx:0,
-vy:0
-};
+let holeNumber=0;
+let strokes=0;
 
-
-let hole={
-x:520,
-y:200,
-r:15
-};
-
-
-let aimX=1;
-let aimY=0;
+let angle=0;
 let power=0;
-
 
 let charging=false;
 
 
-let keys={};
+let ball={
+x:100,
+y:350,
+vx:0,
+vy:0,
+r:10
+};
 
 
-let strokes=0;
+let maps=[
+
+{
+hole:{x:600,y:80},
+sand:[
+{x:300,y:200,w:100,h:70}
+],
+water:[
+{x:450,y:300,w:120,h:80}
+]
+},
 
 
+{
+hole:{x:100,y:80},
+sand:[
+{x:250,y:100,w:120,h:80},
+{x:500,y:250,w:80,h:70}
+],
+water:[
+{x:350,y:350,w:150,h:50}
+]
+},
 
-let walls=[
 
-{x:250,y:0,w:20,h:150},
+{
+hole:{x:600,y:350},
+sand:[
+{x:200,y:250,w:100,h:100}
+],
+water:[
+{x:300,y:0,w:100,h:150}
+]
+},
 
-{x:250,y:250,w:20,h:150},
 
-{x:400,y:100,w:20,h:200}
+{
+hole:{x:350,y:60},
+sand:[
+{x:100,y:150,w:120,h:80},
+{x:500,y:150,w:120,h:80}
+],
+water:[
+{x:250,y:300,w:200,h:60}
+]
+},
+
+
+{
+hole:{x:80,y:350},
+sand:[
+{x:400,y:100,w:120,h:100}
+],
+water:[
+{x:150,y:0,w:100,h:200}
+]
+}
 
 ];
 
 
 
-// keyboard
+let map;
+
+
+
+function loadMap(){
+
+map=maps[holeNumber];
+
+ball.x=100;
+ball.y=350;
+
+ball.vx=0;
+ball.vy=0;
+
+document.getElementById("holeNum").innerHTML=
+holeNumber+1;
+
+}
+
+
+
+function nextHole(){
+
+holeNumber++;
+
+if(holeNumber>=maps.length){
+
+alert("🏆 You beat all holes!");
+
+holeNumber=0;
+strokes=0;
+
+}
+
+loadMap();
+
+}
+
+
 
 document.addEventListener("keydown",e=>{
 
-keys[e.key]=true;
+if(e.key==="ArrowLeft")
+angle-=0.1;
 
+if(e.key==="ArrowRight")
+angle+=0.1;
 
-if(e.code==="Space"){
+if(e.code==="Space")
 charging=true;
-}
 
 });
 
 
 document.addEventListener("keyup",e=>{
 
-keys[e.key]=false;
-
-
-if(e.code==="Space" && charging){
+if(e.code==="Space"){
 
 shoot(power);
 
@@ -119,64 +206,37 @@ charging=false;
 
 
 
-
-// mouse
-
-let dragging=false;
-let startX;
-let startY;
-
-
 canvas.onmousedown=e=>{
 
-dragging=true;
-
-startX=e.offsetX;
-startY=e.offsetY;
+charging=true;
 
 };
 
 
 canvas.onmouseup=e=>{
 
-if(!dragging)return;
+shoot(power);
 
+power=0;
 
-let dx=startX-e.offsetX;
-let dy=startY-e.offsetY;
-
-
-shoot(Math.min(Math.hypot(dx,dy)/4,20),dx,dy);
-
-
-dragging=false;
+charging=false;
 
 };
 
 
 
+function shoot(p){
 
+if(ball.vx||ball.vy)return;
 
-function shoot(p,dx=aimX,dy=aimY){
-
-if(ball.vx!==0||ball.vy!==0)return;
-
-
-let len=Math.hypot(dx,dy);
-
-if(len===0)return;
-
-
-ball.vx=(dx/len)*p;
-ball.vy=(dy/len)*p;
-
+ball.vx=Math.cos(angle)*p;
+ball.vy=Math.sin(angle)*p;
 
 strokes++;
 
-document.getElementById("score").innerHTML=strokes;
+document.getElementById("strokes").innerHTML=strokes;
 
 }
-
 
 
 
@@ -184,27 +244,14 @@ document.getElementById("score").innerHTML=strokes;
 function update(){
 
 
-// keyboard aim
-
-if(keys["ArrowLeft"]) aimX=-1;
-
-if(keys["ArrowRight"]) aimX=1;
-
-if(keys["ArrowUp"]) aimY=-1;
-
-if(keys["ArrowDown"]) aimY=1;
-
-
-
 if(charging){
 
-power+=0.2;
+power+=0.15;
 
-if(power>20)
-power=20;
+if(power>12)
+power=12;
 
 }
-
 
 
 
@@ -212,23 +259,56 @@ ball.x+=ball.vx;
 ball.y+=ball.vy;
 
 
-
 ball.vx*=0.98;
 ball.vy*=0.98;
 
 
 
-walls.forEach(w=>{
+// walls
+
+if(ball.x<10||ball.x>690)
+ball.vx*=-1;
+
+if(ball.y<10||ball.y>440)
+ball.vy*=-1;
+
+
+
+// sand
+
+map.sand.forEach(s=>{
 
 if(
-ball.x+ball.r>w.x &&
-ball.x-ball.r<w.x+w.w &&
-ball.y+ball.r>w.y &&
-ball.y-ball.r<w.y+w.h
+ball.x>s.x &&
+ball.x<s.x+s.w &&
+ball.y>s.y &&
+ball.y<s.y+s.h
 ){
 
-ball.vx*=-1;
-ball.vy*=-1;
+ball.vx*=0.96;
+ball.vy*=0.96;
+
+}
+
+});
+
+
+// water
+
+map.water.forEach(w=>{
+
+if(
+ball.x>w.x &&
+ball.x<w.x+w.w &&
+ball.y>w.y &&
+ball.y<w.y+w.h
+){
+
+ball.x=100;
+ball.y=350;
+
+ball.vx=0;
+ball.vy=0;
 
 }
 
@@ -236,33 +316,21 @@ ball.vy*=-1;
 
 
 
-if(ball.x<10||ball.x>590)
-ball.vx*=-1;
+// win
 
-
-if(ball.y<10||ball.y>390)
-ball.vy*=-1;
-
-
-
-
-let distance=Math.hypot(
-ball.x-hole.x,
-ball.y-hole.y
+let d=Math.hypot(
+ball.x-map.hole.x,
+ball.y-map.hole.y
 );
 
 
+if(d<15){
 
-if(distance<hole.r){
+alert("⛳ Hole Complete!");
 
-document.getElementById("msg").innerHTML=
-"🏆 You Win in "+strokes+" strokes!";
-
-ball.vx=0;
-ball.vy=0;
+nextHole();
 
 }
-
 
 
 draw();
@@ -273,10 +341,27 @@ requestAnimationFrame(update);
 
 
 
-
 function draw(){
 
-ctx.clearRect(0,0,600,400);
+ctx.clearRect(0,0,700,450);
+
+
+// sand
+
+ctx.fillStyle="#d6b656";
+
+map.sand.forEach(s=>{
+ctx.fillRect(s.x,s.y,s.w,s.h);
+});
+
+
+// water
+
+ctx.fillStyle="#2563eb";
+
+map.water.forEach(w=>{
+ctx.fillRect(w.x,w.y,w.w,w.h);
+});
 
 
 // hole
@@ -286,9 +371,9 @@ ctx.fillStyle="black";
 ctx.beginPath();
 
 ctx.arc(
-hole.x,
-hole.y,
-hole.r,
+map.hole.x,
+map.hole.y,
+15,
 0,
 Math.PI*2
 );
@@ -296,22 +381,16 @@ Math.PI*2
 ctx.fill();
 
 
+// flag
 
-// walls
-
-ctx.fillStyle="#166534";
-
-walls.forEach(w=>{
+ctx.fillStyle="white";
 
 ctx.fillRect(
-w.x,
-w.y,
-w.w,
-w.h
+map.hole.x,
+map.hole.y-50,
+3,
+50
 );
-
-});
-
 
 
 // ball
@@ -337,8 +416,8 @@ ctx.fillStyle="yellow";
 
 ctx.fillRect(
 20,
-370,
-power*5,
+420,
+power*10,
 10
 );
 
@@ -346,7 +425,7 @@ power*5,
 }
 
 
-
+loadMap();
 update();
 
 </script>
