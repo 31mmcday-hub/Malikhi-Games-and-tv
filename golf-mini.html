@@ -1,41 +1,355 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Golf Mini - Malikhi Games</title>
+<title>Mini Golf</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#10131a;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center;padding:20px}
-.game{width:min(700px,100%);text-align:center;background:#181d27;border:1px solid #303746;border-radius:20px;padding:24px;box-shadow:0 15px 50px #0008}
-h1{margin:0 0 6px}p{color:#aeb6c5}canvas{width:min(620px,100%);height:auto;background:#080a0f;border-radius:14px;border:1px solid #394150;display:block;margin:18px auto}
-button{border:0;border-radius:12px;padding:12px 20px;background:#fff;color:#111;font-weight:700;cursor:pointer;font-size:16px}
-.score{font-size:20px;font-weight:700}.hint{font-size:14px}
+body{
+background:#14532d;
+color:white;
+text-align:center;
+font-family:Arial;
+}
+
+canvas{
+background:#22c55e;
+border:3px solid white;
+display:block;
+margin:auto;
+}
 </style>
+
 </head>
-<body><div class="game">
-<h1>⛳ Golf Mini</h1><p>Get it in the hole</p>
-<div class="score">Score: <span id="score">0</span> | Best: <span id="best">0</span></div>
+
+<body>
+
+<h1>⛳ Mini Golf</h1>
+
+<h2>Strokes: <span id="score">0</span></h2>
+
+<p>
+🖱️ Mouse: Drag and release<br>
+⌨️ Keyboard: Arrows aim | Hold Space then release to shoot
+</p>
+
 <canvas id="game" width="600" height="400"></canvas>
-<button id="start">Start / Restart</button>
-<p class="hint">Use your mouse or touch the game area. Move the player to catch the glowing target and avoid the red hazards.</p>
-</div>
+
+<h2 id="msg"></h2>
+
+
 <script>
-const c=document.getElementById('game'),x=c.getContext('2d'),scoreEl=document.getElementById('score'),bestEl=document.getElementById('best');
-let player={x:300,y:330,r:16},target={x:100,y:100,r:12},hazards=[],score=0,running=false,last=0,best=+localStorage.getItem('mg-best-golf-mini')||0;
-bestEl.textContent=best;
-function reset(){player={x:300,y:330,r:16};target={x:100+Math.random()*400,y:70+Math.random()*260,r:12};hazards=[];score=0;scoreEl.textContent=0;running=true;last=performance.now();requestAnimationFrame(loop)}
-function move(e){let r=c.getBoundingClientRect(),p=e.touches?e.touches[0]:e;player.x=(p.clientX-r.left)*c.width/r.width;player.y=(p.clientY-r.top)*c.height/r.height}
-c.addEventListener('mousemove',move);c.addEventListener('touchmove',e=>{e.preventDefault();move(e)},{passive:false});
-function addHazard(){hazards.push({x:Math.random()*570+15,y:-20,r:10+Math.random()*12,s:100+Math.random()*140})}
-function loop(t){if(!running)return;let dt=Math.min(.03,(t-last)/1000);last=t;if(Math.random()<dt*.9)addHazard();
-hazards.forEach(h=>h.y+=h.s*dt);hazards=hazards.filter(h=>h.y<430);
-let dx=player.x-target.x,dy=player.y-target.y;if(Math.hypot(dx,dy)<player.r+target.r){score++;scoreEl.textContent=score;target.x=30+Math.random()*540;target.y=50+Math.random()*300}
-for(const h of hazards)if(Math.hypot(player.x-h.x,player.y-h.y)<player.r+h.r){running=false;if(score>best){best=score;localStorage.setItem('mg-best-golf-mini',best);bestEl.textContent=best}draw(true);return}
-draw(false);requestAnimationFrame(loop)}
-function draw(over){x.clearRect(0,0,c.width,c.height);x.fillStyle='#0b0e14';x.fillRect(0,0,c.width,c.height);
-x.fillStyle='#5cf';x.beginPath();x.arc(target.x,target.y,target.r,0,Math.PI*2);x.fill();
-x.fillStyle='#f44';hazards.forEach(h=>{x.beginPath();x.arc(h.x,h.y,h.r,0,Math.PI*2);x.fill()});
-x.fillStyle='#fff';x.beginPath();x.arc(player.x,player.y,player.r,0,Math.PI*2);x.fill();
-if(over){x.fillStyle='#fff';x.font='bold 38px Arial';x.textAlign='center';x.fillText('GAME OVER',300,200);x.font='20px Arial';x.fillText('Score: '+score,300,235)}}
-draw(false);document.getElementById('start').onclick=reset;
-</script></body></html>
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+
+let ball={
+x:100,
+y:200,
+r:10,
+vx:0,
+vy:0
+};
+
+
+let hole={
+x:520,
+y:200,
+r:15
+};
+
+
+let aimX=1;
+let aimY=0;
+let power=0;
+
+
+let charging=false;
+
+
+let keys={};
+
+
+let strokes=0;
+
+
+
+let walls=[
+
+{x:250,y:0,w:20,h:150},
+
+{x:250,y:250,w:20,h:150},
+
+{x:400,y:100,w:20,h:200}
+
+];
+
+
+
+// keyboard
+
+document.addEventListener("keydown",e=>{
+
+keys[e.key]=true;
+
+
+if(e.code==="Space"){
+charging=true;
+}
+
+});
+
+
+document.addEventListener("keyup",e=>{
+
+keys[e.key]=false;
+
+
+if(e.code==="Space" && charging){
+
+shoot(power);
+
+power=0;
+
+charging=false;
+
+}
+
+});
+
+
+
+
+// mouse
+
+let dragging=false;
+let startX;
+let startY;
+
+
+canvas.onmousedown=e=>{
+
+dragging=true;
+
+startX=e.offsetX;
+startY=e.offsetY;
+
+};
+
+
+canvas.onmouseup=e=>{
+
+if(!dragging)return;
+
+
+let dx=startX-e.offsetX;
+let dy=startY-e.offsetY;
+
+
+shoot(Math.min(Math.hypot(dx,dy)/4,20),dx,dy);
+
+
+dragging=false;
+
+};
+
+
+
+
+
+function shoot(p,dx=aimX,dy=aimY){
+
+if(ball.vx!==0||ball.vy!==0)return;
+
+
+let len=Math.hypot(dx,dy);
+
+if(len===0)return;
+
+
+ball.vx=(dx/len)*p;
+ball.vy=(dy/len)*p;
+
+
+strokes++;
+
+document.getElementById("score").innerHTML=strokes;
+
+}
+
+
+
+
+
+function update(){
+
+
+// keyboard aim
+
+if(keys["ArrowLeft"]) aimX=-1;
+
+if(keys["ArrowRight"]) aimX=1;
+
+if(keys["ArrowUp"]) aimY=-1;
+
+if(keys["ArrowDown"]) aimY=1;
+
+
+
+if(charging){
+
+power+=0.2;
+
+if(power>20)
+power=20;
+
+}
+
+
+
+
+ball.x+=ball.vx;
+ball.y+=ball.vy;
+
+
+
+ball.vx*=0.98;
+ball.vy*=0.98;
+
+
+
+walls.forEach(w=>{
+
+if(
+ball.x+ball.r>w.x &&
+ball.x-ball.r<w.x+w.w &&
+ball.y+ball.r>w.y &&
+ball.y-ball.r<w.y+w.h
+){
+
+ball.vx*=-1;
+ball.vy*=-1;
+
+}
+
+});
+
+
+
+if(ball.x<10||ball.x>590)
+ball.vx*=-1;
+
+
+if(ball.y<10||ball.y>390)
+ball.vy*=-1;
+
+
+
+
+let distance=Math.hypot(
+ball.x-hole.x,
+ball.y-hole.y
+);
+
+
+
+if(distance<hole.r){
+
+document.getElementById("msg").innerHTML=
+"🏆 You Win in "+strokes+" strokes!";
+
+ball.vx=0;
+ball.vy=0;
+
+}
+
+
+
+draw();
+
+requestAnimationFrame(update);
+
+}
+
+
+
+
+function draw(){
+
+ctx.clearRect(0,0,600,400);
+
+
+// hole
+
+ctx.fillStyle="black";
+
+ctx.beginPath();
+
+ctx.arc(
+hole.x,
+hole.y,
+hole.r,
+0,
+Math.PI*2
+);
+
+ctx.fill();
+
+
+
+// walls
+
+ctx.fillStyle="#166534";
+
+walls.forEach(w=>{
+
+ctx.fillRect(
+w.x,
+w.y,
+w.w,
+w.h
+);
+
+});
+
+
+
+// ball
+
+ctx.fillStyle="white";
+
+ctx.beginPath();
+
+ctx.arc(
+ball.x,
+ball.y,
+ball.r,
+0,
+Math.PI*2
+);
+
+ctx.fill();
+
+
+// power bar
+
+ctx.fillStyle="yellow";
+
+ctx.fillRect(
+20,
+370,
+power*5,
+10
+);
+
+
+}
+
+
+
+update();
+
+</script>
+
+</body>
+</html>
