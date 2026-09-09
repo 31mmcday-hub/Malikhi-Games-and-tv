@@ -1,41 +1,820 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Math Race - Malikhi Games</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#10131a;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center;padding:20px}
-.game{width:min(700px,100%);text-align:center;background:#181d27;border:1px solid #303746;border-radius:20px;padding:24px;box-shadow:0 15px 50px #0008}
-h1{margin:0 0 6px}p{color:#aeb6c5}canvas{width:min(620px,100%);height:auto;background:#080a0f;border-radius:14px;border:1px solid #394150;display:block;margin:18px auto}
-button{border:0;border-radius:12px;padding:12px 20px;background:#fff;color:#111;font-weight:700;cursor:pointer;font-size:16px}
-.score{font-size:20px;font-weight:700}.hint{font-size:14px}
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:#0f172a;
+  color:white;
+  font-family:Arial,sans-serif;
+  text-align:center;
+  overflow-x:hidden;
+}
+
+h1{
+  margin:15px 0 5px;
+  font-size:34px;
+}
+
+.subtitle{
+  margin:0 0 12px;
+  opacity:.75;
+}
+
+#top{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+
+.stat{
+  background:#1e293b;
+  padding:10px 15px;
+  border-radius:12px;
+  font-weight:bold;
+}
+
+#game{
+  position:relative;
+  width:min(850px,96vw);
+  height:520px;
+  margin:auto;
+  overflow:hidden;
+  border:4px solid white;
+  border-radius:18px;
+  background:#38bdf8;
+  box-shadow:0 15px 40px rgba(0,0,0,.45);
+}
+
+/* SKY */
+
+.sky{
+  position:absolute;
+  inset:0 0 230px 0;
+  background:linear-gradient(#38bdf8,#bae6fd);
+}
+
+/* CLOUDS */
+
+.cloud{
+  position:absolute;
+  width:100px;
+  height:35px;
+  background:white;
+  border-radius:30px;
+  opacity:.75;
+}
+
+.cloud:before,
+.cloud:after{
+  content:"";
+  position:absolute;
+  background:white;
+  border-radius:50%;
+}
+
+.cloud:before{
+  width:45px;
+  height:45px;
+  left:15px;
+  top:-20px;
+}
+
+.cloud:after{
+  width:55px;
+  height:55px;
+  right:12px;
+  top:-25px;
+}
+
+/* ROAD */
+
+#road{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:230px;
+  background:#374151;
+}
+
+#road:before{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height:8px;
+  background:#facc15;
+}
+
+.lane{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:7px;
+  border-left:6px dashed rgba(255,255,255,.7);
+}
+
+.lane1{left:33%}
+.lane2{left:66%}
+
+/* FINISH */
+
+#finish{
+  position:absolute;
+  right:0;
+  bottom:0;
+  width:12px;
+  height:230px;
+  background:repeating-linear-gradient(
+    45deg,
+    white 0 15px,
+    black 15px 30px
+  );
+  display:none;
+}
+
+/* CARS */
+
+.car{
+  position:absolute;
+  width:58px;
+  height:92px;
+  border-radius:13px;
+  transition:left .18s ease;
+}
+
+.car:before{
+  content:"";
+  position:absolute;
+  left:8px;
+  right:8px;
+  top:15px;
+  height:32px;
+  background:#bfdbfe;
+  border-radius:8px;
+}
+
+.car:after{
+  content:"";
+  position:absolute;
+  left:-6px;
+  top:16px;
+  width:8px;
+  height:20px;
+  background:#111;
+  border-radius:5px;
+  box-shadow:
+    62px 0 #111,
+    0 45px #111,
+    62px 45px #111;
+}
+
+#player{
+  background:#ef4444;
+  left:calc(50% - 29px);
+  bottom:28px;
+  z-index:10;
+}
+
+.enemy{
+  background:#8b5cf6;
+  z-index:5;
+}
+
+/* QUESTION */
+
+#panel{
+  width:min(600px,94vw);
+  margin:15px auto;
+  padding:18px;
+  background:#1e293b;
+  border-radius:18px;
+}
+
+#question{
+  font-size:38px;
+  font-weight:bold;
+  margin:5px 0 15px;
+}
+
+#answer{
+  width:220px;
+  max-width:80%;
+  padding:13px;
+  border:0;
+  border-radius:12px;
+  font-size:24px;
+  text-align:center;
+  outline:none;
+}
+
+button{
+  padding:11px 18px;
+  margin:5px;
+  border:0;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+
+#submit{
+  background:#22c55e;
+  color:white;
+}
+
+#start{
+  background:#facc15;
+  color:#111;
+}
+
+#message{
+  min-height:28px;
+  margin-top:10px;
+  font-size:19px;
+  font-weight:bold;
+}
+
+#progressBox{
+  width:min(600px,90%);
+  height:14px;
+  margin:15px auto;
+  background:#334155;
+  border-radius:20px;
+  overflow:hidden;
+}
+
+#progress{
+  width:0%;
+  height:100%;
+  background:#22c55e;
+  transition:width .2s;
+}
+
+#overlay{
+  position:absolute;
+  inset:0;
+  z-index:30;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.5);
+}
+
+#overlayBox{
+  width:85%;
+  max-width:430px;
+  padding:25px;
+  background:rgba(15,23,42,.95);
+  border:2px solid white;
+  border-radius:20px;
+}
+
+#overlayTitle{
+  font-size:32px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+#overlayText{
+  line-height:1.5;
+}
+
+.hidden{
+  display:none !important;
+}
 </style>
 </head>
-<body><div class="game">
-<h1>➗ Math Race</h1><p>Answer fast to win</p>
-<div class="score">Score: <span id="score">0</span> | Best: <span id="best">0</span></div>
-<canvas id="game" width="600" height="400"></canvas>
-<button id="start">Start / Restart</button>
-<p class="hint">Use your mouse or touch the game area. Move the player to catch the glowing target and avoid the red hazards.</p>
+
+<body>
+
+<h1>🏎️ Math Race</h1>
+<p class="subtitle">Answer correctly to make your car FLY! 🧠💨</p>
+
+<div id="top">
+  <div class="stat">🏁 Position: <span id="position">3rd</span></div>
+  <div class="stat">⭐ Score: <span id="score">0</span></div>
+  <div class="stat">🔥 Streak: <span id="streak">0</span></div>
+  <div class="stat">⏱️ <span id="time">60</span></div>
 </div>
+
+<div id="game">
+
+  <div class="sky"></div>
+
+  <div class="cloud" style="left:80px;top:65px"></div>
+  <div class="cloud" style="left:480px;top:110px"></div>
+  <div class="cloud" style="left:680px;top:45px"></div>
+
+  <div id="road">
+    <div class="lane lane1"></div>
+    <div class="lane lane2"></div>
+  </div>
+
+  <div id="finish"></div>
+
+  <div id="player" class="car"></div>
+
+  <div id="panel">
+
+    <div id="question">Press Start!</div>
+
+    <input
+      id="answer"
+      type="number"
+      placeholder="Answer"
+      autocomplete="off"
+    >
+
+    <br>
+
+    <button id="submit" onclick="checkAnswer()">✅ Answer</button>
+    <button id="start" onclick="startGame()">🚦 Start Race</button>
+
+    <div id="message"></div>
+
+    <div id="progressBox">
+      <div id="progress"></div>
+    </div>
+
+  </div>
+
+  <div id="overlay">
+    <div id="overlayBox">
+
+      <div id="overlayTitle">🏎️ MATH RACE</div>
+
+      <div id="overlayText">
+        Answer math problems correctly to move your car forward!<br><br>
+        Get streaks to go even faster 🔥
+        <br><br>
+        First to the finish wins!
+      </div>
+
+      <button onclick="startGame()">🚦 START RACE</button>
+
+    </div>
+  </div>
+
+</div>
+
 <script>
-const c=document.getElementById('game'),x=c.getContext('2d'),scoreEl=document.getElementById('score'),bestEl=document.getElementById('best');
-let player={x:300,y:330,r:16},target={x:100,y:100,r:12},hazards=[],score=0,running=false,last=0,best=+localStorage.getItem('mg-best-math-race')||0;
-bestEl.textContent=best;
-function reset(){player={x:300,y:330,r:16};target={x:100+Math.random()*400,y:70+Math.random()*260,r:12};hazards=[];score=0;scoreEl.textContent=0;running=true;last=performance.now();requestAnimationFrame(loop)}
-function move(e){let r=c.getBoundingClientRect(),p=e.touches?e.touches[0]:e;player.x=(p.clientX-r.left)*c.width/r.width;player.y=(p.clientY-r.top)*c.height/r.height}
-c.addEventListener('mousemove',move);c.addEventListener('touchmove',e=>{e.preventDefault();move(e)},{passive:false});
-function addHazard(){hazards.push({x:Math.random()*570+15,y:-20,r:10+Math.random()*12,s:100+Math.random()*140})}
-function loop(t){if(!running)return;let dt=Math.min(.03,(t-last)/1000);last=t;if(Math.random()<dt*.9)addHazard();
-hazards.forEach(h=>h.y+=h.s*dt);hazards=hazards.filter(h=>h.y<430);
-let dx=player.x-target.x,dy=player.y-target.y;if(Math.hypot(dx,dy)<player.r+target.r){score++;scoreEl.textContent=score;target.x=30+Math.random()*540;target.y=50+Math.random()*300}
-for(const h of hazards)if(Math.hypot(player.x-h.x,player.y-h.y)<player.r+h.r){running=false;if(score>best){best=score;localStorage.setItem('mg-best-math-race',best);bestEl.textContent=best}draw(true);return}
-draw(false);requestAnimationFrame(loop)}
-function draw(over){x.clearRect(0,0,c.width,c.height);x.fillStyle='#0b0e14';x.fillRect(0,0,c.width,c.height);
-x.fillStyle='#5cf';x.beginPath();x.arc(target.x,target.y,target.r,0,Math.PI*2);x.fill();
-x.fillStyle='#f44';hazards.forEach(h=>{x.beginPath();x.arc(h.x,h.y,h.r,0,Math.PI*2);x.fill()});
-x.fillStyle='#fff';x.beginPath();x.arc(player.x,player.y,player.r,0,Math.PI*2);x.fill();
-if(over){x.fillStyle='#fff';x.font='bold 38px Arial';x.textAlign='center';x.fillText('GAME OVER',300,200);x.font='20px Arial';x.fillText('Score: '+score,300,235)}}
-draw(false);document.getElementById('start').onclick=reset;
-</script></body></html>
+
+let playing=false;
+let score=0;
+let streak=0;
+let time=60;
+
+let playerProgress=0;
+let enemy1Progress=0;
+let enemy2Progress=0;
+
+let correctAnswer=0;
+
+let timerInterval=null;
+let enemyInterval=null;
+
+const questionEl=document.getElementById("question");
+const answerEl=document.getElementById("answer");
+const scoreEl=document.getElementById("score");
+const streakEl=document.getElementById("streak");
+const timeEl=document.getElementById("time");
+const messageEl=document.getElementById("message");
+const progressEl=document.getElementById("progress");
+const positionEl=document.getElementById("position");
+
+const player=document.getElementById("player");
+const overlay=document.getElementById("overlay");
+const overlayTitle=document.getElementById("overlayTitle");
+const overlayText=document.getElementById("overlayText");
+
+
+
+/* START */
+
+function startGame(){
+
+clearInterval(timerInterval);
+clearInterval(enemyInterval);
+
+playing=true;
+
+score=0;
+streak=0;
+time=60;
+
+playerProgress=0;
+enemy1Progress=0;
+enemy2Progress=0;
+
+scoreEl.textContent=0;
+streakEl.textContent=0;
+timeEl.textContent=60;
+
+messageEl.textContent="";
+
+overlay.classList.add("hidden");
+
+removeEnemies();
+
+createEnemies();
+
+newQuestion();
+
+updateCars();
+
+answerEl.focus();
+
+timerInterval=setInterval(()=>{
+
+time--;
+
+timeEl.textContent=time;
+
+if(time<=0){
+endGame("⏰ TIME'S UP!");
+}
+
+},1000);
+
+
+/* Enemy movement */
+
+enemyInterval=setInterval(()=>{
+
+if(!playing)return;
+
+enemy1Progress+=Math.random()*1.8;
+enemy2Progress+=Math.random()*1.6;
+
+updateCars();
+
+checkWinner();
+
+},350);
+
+}
+
+
+
+/* QUESTIONS */
+
+function newQuestion(){
+
+if(!playing)return;
+
+let difficulty=Math.floor(score/5);
+
+let max=10+difficulty*7;
+
+let a=Math.floor(Math.random()*max)+1;
+let b=Math.floor(Math.random()*max)+1;
+
+let type=Math.floor(Math.random()*3);
+
+if(type===0){
+
+correctAnswer=a+b;
+
+questionEl.textContent=
+a+" + "+b+" = ?";
+
+}
+
+else if(type===1){
+
+if(b>a){
+
+let temp=a;
+a=b;
+b=temp;
+
+}
+
+correctAnswer=a-b;
+
+questionEl.textContent=
+a+" − "+b+" = ?";
+
+}
+
+else{
+
+correctAnswer=a*b;
+
+questionEl.textContent=
+a+" × "+b+" = ?";
+
+}
+
+answerEl.value="";
+
+}
+
+
+
+/* CHECK ANSWER */
+
+function checkAnswer(){
+
+if(!playing)return;
+
+if(answerEl.value===""){
+
+messageEl.textContent="Type an answer first 😭";
+
+return;
+
+}
+
+let answer=Number(answerEl.value);
+
+if(answer===correctAnswer){
+
+score++;
+streak++;
+
+scoreEl.textContent=score;
+streakEl.textContent=streak;
+
+
+/* Speed boost */
+
+let boost=2;
+
+if(streak>=3){
+boost=3.5;
+messageEl.textContent="🔥 STREAK! +" + boost + " SPEED";
+}else{
+messageEl.textContent="✅ CORRECT! +" + boost + " SPEED";
+}
+
+playerProgress+=boost;
+
+if(playerProgress>100){
+playerProgress=100;
+}
+
+updateCars();
+
+checkWinner();
+
+if(playing){
+newQuestion();
+}
+
+}
+
+else{
+
+streak=0;
+
+streakEl.textContent=0;
+
+messageEl.textContent="❌ WRONG! You slowed down!";
+
+playerProgress=Math.max(
+0,
+playerProgress-1
+);
+
+updateCars();
+
+}
+
+answerEl.focus();
+
+}
+
+
+
+/* KEYBOARD */
+
+answerEl.addEventListener("keydown",e=>{
+
+if(e.key==="Enter"){
+checkAnswer();
+}
+
+});
+
+
+
+/* ENEMIES */
+
+function createEnemies(){
+
+let e1=document.createElement("div");
+
+e1.className="car enemy";
+
+e1.id="enemy1";
+
+e1.style.left="calc(25% - 29px)";
+e1.style.bottom="28px";
+
+document.getElementById("game").appendChild(e1);
+
+
+let e2=document.createElement("div");
+
+e2.className="car enemy";
+
+e2.id="enemy2";
+
+e2.style.left="calc(75% - 29px)";
+e2.style.bottom="28px";
+
+document.getElementById("game").appendChild(e2);
+
+}
+
+
+
+function removeEnemies(){
+
+document.querySelectorAll(".enemy").forEach(e=>e.remove());
+
+}
+
+
+
+/* CAR MOVEMENT */
+
+function updateCars(){
+
+/*
+  Cars move visually from bottom
+  toward the finish.
+*/
+
+let roadHeight=230;
+
+let maxLeft=760;
+
+let minLeft=35;
+
+
+/* Player */
+
+let playerLane;
+
+if(playerProgress<34){
+playerLane=25;
+}
+else if(playerProgress<67){
+playerLane=50;
+}
+else{
+playerLane=75;
+}
+
+player.style.left=
+"calc("+playerLane+"% - 29px)";
+
+
+/* Enemy 1 */
+
+let e1=document.getElementById("enemy1");
+
+if(e1){
+
+let lane=enemy1Progress<50?25:75;
+
+e1.style.left=
+"calc("+lane+"% - 29px)";
+
+e1.style.bottom=
+(28+enemy1Progress*1.35)+"px";
+
+}
+
+
+/* Enemy 2 */
+
+let e2=document.getElementById("enemy2");
+
+if(e2){
+
+let lane=enemy2Progress<40?75:50;
+
+e2.style.left=
+"calc("+lane+"% - 29px)";
+
+e2.style.bottom=
+(28+enemy2Progress*1.35)+"px";
+
+}
+
+
+/* Progress bar */
+
+progressEl.style.width=
+playerProgress+"%";
+
+
+/* Position */
+
+let players=[
+{n:"You",p:playerProgress},
+{n:"Rival 1",p:enemy1Progress},
+{n:"Rival 2",p:enemy2Progress}
+];
+
+players.sort((a,b)=>b.p-a.p);
+
+let place=players.findIndex(x=>x.n==="You")+1;
+
+positionEl.textContent=
+place===1?"1st":
+place===2?"2nd":
+"3rd";
+
+}
+
+
+
+/* WINNER */
+
+function checkWinner(){
+
+if(!playing)return;
+
+if(playerProgress>=100){
+
+endGame("🏆 YOU WIN!");
+
+return;
+
+}
+
+if(enemy1Progress>=100){
+
+endGame("💀 RIVAL 1 WINS!");
+
+return;
+
+}
+
+if(enemy2Progress>=100){
+
+endGame("💀 RIVAL 2 WINS!");
+
+return;
+
+}
+
+}
+
+
+
+/* END */
+
+function endGame(title){
+
+if(!playing)return;
+
+playing=false;
+
+clearInterval(timerInterval);
+clearInterval(enemyInterval);
+
+overlay.classList.remove("hidden");
+
+overlayTitle.textContent=title;
+
+overlayText.innerHTML=
+"🏁 Race finished!<br><br>"+
+"⭐ Score: <b>"+score+"</b><br>"+
+"🔥 Best Streak: <b>"+streak+"</b><br><br>"+
+"Hit the button to race again!";
+
+}
+
+
+
+/* INIT */
+
+player.style.left="calc(50% - 29px)";
+
+</script>
+
+</body>
+</html>
