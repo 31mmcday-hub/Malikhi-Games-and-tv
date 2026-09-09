@@ -1,1 +1,824 @@
-<!doctype html><html><head><meta charset="utf-8"><title>Flappy</title><style>body{margin:0;background:#6cf;text-align:center;font-family:Arial}canvas{background:#8edbff;display:block;margin:auto}</style></head><body><h2>Flappy</h2><canvas id=c width=500 height=600></canvas><script>const x=c.getContext('2d');let y=300,v=0,score=0,pipes=[];onkeydown=()=>v=-8;onmousedown=()=>v=-8;setInterval(()=>{v+=.45;y+=v;if(Math.random()<.025)pipes.push({x:500,g:130+Math.random()*280});pipes.forEach(p=>p.x-=4);pipes=pipes.filter(p=>p.x>-60);x.clearRect(0,0,500,600);x.fillStyle='#5b3';pipes.forEach(p=>{x.fillRect(p.x,0,55,p.g-70);x.fillRect(p.x,p.g+70,55,600);if(p.x<80&&p.x+55>40&&(y< p.g-70||y+20>p.g+70))location.reload()});x.fillStyle='#f55';x.fillRect(40,y,22,22);x.fillStyle='#111';x.fillText('Score: '+score,10,20);if(y<0||y>580)location.reload();score++},30)</script></body></html>
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Flappy Bird - Malikhi Games</title>
+
+<style>
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+background:#111827;
+color:white;
+font-family:Arial,sans-serif;
+text-align:center;
+user-select:none;
+}
+
+h1{
+margin:12px 0 5px;
+}
+
+.stats{
+font-size:20px;
+margin-bottom:8px;
+}
+
+#game{
+display:block;
+margin:auto;
+border:4px solid white;
+border-radius:12px;
+max-width:95vw;
+height:auto;
+touch-action:none;
+}
+
+.controls{
+margin:10px;
+}
+
+button{
+background:white;
+border:0;
+border-radius:10px;
+padding:10px 18px;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
+margin:4px;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+#message{
+font-size:22px;
+font-weight:bold;
+min-height:30px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🐦 Flappy Bird</h1>
+
+<div class="stats">
+Score: <b id="score">0</b>
+&nbsp;&nbsp;|&nbsp;&nbsp;
+Best: <b id="best">0</b>
+</div>
+
+<canvas id="game" width="420" height="650"></canvas>
+
+<div class="controls">
+<button onclick="restart()">🔄 Restart</button>
+<button onclick="togglePause()">⏸️ Pause</button>
+</div>
+
+<p>SPACE / CLICK / TAP = FLAP</p>
+
+<div id="message"></div>
+
+
+<script>
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+const scoreText=document.getElementById("score");
+const bestText=document.getElementById("best");
+const message=document.getElementById("message");
+
+let bird;
+let pipes=[];
+let particles=[];
+let clouds=[];
+
+let score=0;
+let best=Number(localStorage.getItem("malikhiFlappyBest")||0);
+
+let running=false;
+let paused=false;
+
+let spawnTimer=0;
+let lastTime=0;
+
+bestText.textContent=best;
+
+
+
+// ---------- BIRD ----------
+
+function resetBird(){
+
+bird={
+x:105,
+y:300,
+r:17,
+vy:0,
+rotation:0
+};
+
+}
+
+
+
+// ---------- CLOUDS ----------
+
+function makeClouds(){
+
+clouds=[];
+
+for(let i=0;i<6;i++){
+
+clouds.push({
+
+x:Math.random()*420,
+y:50+Math.random()*180,
+speed:0.2+Math.random()*0.3,
+size:25+Math.random()*25
+
+});
+
+}
+
+}
+
+
+
+// ---------- START ----------
+
+function restart(){
+
+score=0;
+scoreText.textContent=0;
+
+pipes=[];
+particles=[];
+
+spawnTimer=0;
+
+paused=false;
+
+running=true;
+
+resetBird();
+
+message.textContent="";
+
+makeClouds();
+
+lastTime=performance.now();
+
+requestAnimationFrame(loop);
+
+}
+
+
+
+// ---------- FLAP ----------
+
+function flap(){
+
+if(!running){
+
+restart();
+return;
+
+}
+
+if(paused)return;
+
+bird.vy=-6.7;
+
+createParticles();
+
+}
+
+
+
+// ---------- PARTICLES ----------
+
+function createParticles(){
+
+for(let i=0;i<5;i++){
+
+particles.push({
+
+x:bird.x-10,
+y:bird.y,
+vx:-1-Math.random()*2,
+vy:(Math.random()-0.5)*2,
+life:25
+
+});
+
+}
+
+}
+
+
+
+// ---------- PIPE ----------
+
+function spawnPipe(){
+
+// Bigger gap = easier
+
+let gap=190;
+
+// Slightly harder later
+
+gap-=Math.min(score*1.2,35);
+
+let minTop=70;
+
+let maxTop=canvas.height-170-gap;
+
+let top=
+minTop+
+Math.random()*(maxTop-minTop);
+
+pipes.push({
+
+x:canvas.width+20,
+
+top:top,
+
+gap:gap,
+
+width:64,
+
+passed:false
+
+});
+
+}
+
+
+
+// ---------- INPUT ----------
+
+document.addEventListener("keydown",e=>{
+
+if(e.code==="Space"){
+
+e.preventDefault();
+
+flap();
+
+}
+
+if(e.code==="KeyP"){
+
+togglePause();
+
+}
+
+});
+
+canvas.addEventListener("mousedown",flap);
+
+canvas.addEventListener("touchstart",e=>{
+
+e.preventDefault();
+
+flap();
+
+},{passive:false});
+
+
+
+// ---------- PAUSE ----------
+
+function togglePause(){
+
+if(!running)return;
+
+paused=!paused;
+
+message.textContent=paused?"⏸️ PAUSED":"";
+
+}
+
+
+
+// ---------- COLLISION ----------
+
+function collision(){
+
+// ceiling
+
+if(bird.y-bird.r<0)return true;
+
+// ground
+
+if(bird.y+bird.r>canvas.height-45)return true;
+
+
+for(const p of pipes){
+
+let bottomY=p.top+p.gap;
+
+let inX=
+bird.x+bird.r>p.x &&
+bird.x-bird.r<p.x+p.width;
+
+if(inX){
+
+if(bird.y-bird.r<p.top)return true;
+
+if(bird.y+bird.r>bottomY)return true;
+
+}
+
+}
+
+return false;
+
+}
+
+
+
+// ---------- GAME OVER ----------
+
+function gameOver(){
+
+running=false;
+
+if(score>best){
+
+best=score;
+
+localStorage.setItem("malikhiFlappyBest",best);
+
+bestText.textContent=best;
+
+}
+
+message.textContent=
+"💀 Game Over — click, tap, or SPACE to play again";
+
+}
+
+
+
+// ---------- UPDATE ----------
+
+function update(dt){
+
+if(paused)return;
+
+
+// gravity
+
+bird.vy+=0.30*dt;
+
+bird.y+=bird.vy*dt;
+
+
+// rotation
+
+bird.rotation=
+Math.max(-0.5,Math.min(1.2,bird.vy/10));
+
+
+// pipe speed
+
+let pipeSpeed=
+2.1+Math.min(score*0.025,0.9);
+
+
+// move pipes
+
+for(const p of pipes){
+
+p.x-=pipeSpeed*dt;
+
+if(
+!p.passed &&
+p.x+p.width<bird.x
+){
+
+p.passed=true;
+
+score++;
+
+scoreText.textContent=score;
+
+}
+
+}
+
+
+// spawn
+
+spawnTimer+=dt;
+
+if(spawnTimer>115){
+
+spawnPipe();
+
+spawnTimer=0;
+
+}
+
+
+// remove old pipes
+
+pipes=pipes.filter(p=>p.x+p.width>-20);
+
+
+// clouds
+
+for(const c of clouds){
+
+c.x-=c.speed*dt;
+
+if(c.x<-100){
+
+c.x=canvas.width+50;
+
+}
+
+}
+
+
+// particles
+
+for(const p of particles){
+
+p.x+=p.vx*dt;
+
+p.y+=p.vy*dt;
+
+p.life-=dt;
+
+}
+
+particles=particles.filter(p=>p.life>0);
+
+
+// collision
+
+if(collision()){
+
+gameOver();
+
+}
+
+}
+
+
+
+// ---------- DRAW BACKGROUND ----------
+
+function drawBackground(){
+
+let night=
+Math.floor(score/10)%2===1;
+
+if(night){
+
+ctx.fillStyle="#172554";
+
+}else{
+
+ctx.fillStyle="#60c9f2";
+
+}
+
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+
+// sun/moon
+
+ctx.fillStyle=night?"#f8fafc":"#fde047";
+
+ctx.beginPath();
+
+ctx.arc(
+night?330:80,
+80,
+30,
+0,
+Math.PI*2
+);
+
+ctx.fill();
+
+
+// clouds
+
+ctx.fillStyle="rgba(255,255,255,.8)";
+
+for(const c of clouds){
+
+ctx.beginPath();
+
+ctx.arc(c.x,c.y,c.size*.55,0,Math.PI*2);
+
+ctx.arc(
+c.x+c.size*.6,
+c.y+5,
+c.size*.7,
+0,
+Math.PI*2
+);
+
+ctx.arc(
+c.x+c.size,
+c.y,
+c.size*.5,
+0,
+Math.PI*2
+);
+
+ctx.fill();
+
+}
+
+}
+
+
+
+// ---------- DRAW PIPES ----------
+
+function drawPipes(){
+
+for(const p of pipes){
+
+let bottomY=p.top+p.gap;
+
+
+// pipe body
+
+ctx.fillStyle="#22c55e";
+
+ctx.fillRect(
+p.x,
+0,
+p.width,
+p.top
+);
+
+ctx.fillRect(
+p.x,
+bottomY,
+p.width,
+canvas.height-bottomY-45
+);
+
+
+// pipe caps
+
+ctx.fillStyle="#16a34a";
+
+ctx.fillRect(
+p.x-6,
+p.top-22,
+p.width+12,
+22
+);
+
+ctx.fillRect(
+p.x-6,
+bottomY,
+p.width+12,
+22
+);
+
+
+// highlights
+
+ctx.fillStyle="#4ade80";
+
+ctx.fillRect(
+p.x+9,
+0,
+8,
+p.top-22
+);
+
+ctx.fillRect(
+p.x+9,
+bottomY+22,
+8,
+canvas.height-bottomY-67
+);
+
+}
+
+}
+
+
+
+// ---------- DRAW BIRD ----------
+
+function drawBird(){
+
+ctx.save();
+
+ctx.translate(bird.x,bird.y);
+
+ctx.rotate(bird.rotation);
+
+
+// body
+
+ctx.fillStyle="#facc15";
+
+ctx.beginPath();
+
+ctx.arc(
+0,
+0,
+bird.r,
+0,
+Math.PI*2
+);
+
+ctx.fill();
+
+
+// wing
+
+ctx.fillStyle="#eab308";
+
+ctx.beginPath();
+
+ctx.ellipse(
+-5,
+5,
+10,
+6,
+-0.3,
+0,
+Math.PI*2
+);
+
+ctx.fill();
+
+
+// eye
+
+ctx.fillStyle="white";
+
+ctx.beginPath();
+
+ctx.arc(7,-7,6,0,Math.PI*2);
+
+ctx.fill();
+
+ctx.fillStyle="black";
+
+ctx.beginPath();
+
+ctx.arc(9,-7,3,0,Math.PI*2);
+
+ctx.fill();
+
+
+// beak
+
+ctx.fillStyle="#f97316";
+
+ctx.beginPath();
+
+ctx.moveTo(15,0);
+
+ctx.lineTo(29,5);
+
+ctx.lineTo(15,9);
+
+ctx.closePath();
+
+ctx.fill();
+
+ctx.restore();
+
+}
+
+
+
+// ---------- DRAW GROUND ----------
+
+function drawGround(){
+
+ctx.fillStyle="#84cc16";
+
+ctx.fillRect(
+0,
+canvas.height-45,
+canvas.width,
+45
+);
+
+ctx.fillStyle="#65a30d";
+
+for(let x=0;x<canvas.width;x+=20){
+
+ctx.fillRect(
+x,
+canvas.height-45,
+10,
+6
+);
+
+}
+
+}
+
+
+
+// ---------- DRAW PARTICLES ----------
+
+function drawParticles(){
+
+ctx.fillStyle="#fde047";
+
+for(const p of particles){
+
+ctx.globalAlpha=p.life/25;
+
+ctx.fillRect(
+p.x,
+p.y,
+4,
+4
+);
+
+}
+
+ctx.globalAlpha=1;
+
+}
+
+
+
+// ---------- DRAW ----------
+
+function draw(){
+
+ctx.clearRect(
+0,
+0,
+canvas.width,
+canvas.height
+);
+
+drawBackground();
+
+drawPipes();
+
+drawGround();
+
+drawParticles();
+
+drawBird();
+
+}
+
+
+
+// ---------- LOOP ----------
+
+function loop(time){
+
+if(!running){
+
+draw();
+
+return;
+
+}
+
+let dt=(time-lastTime)/16.67;
+
+lastTime=time;
+
+dt=Math.min(dt,2);
+
+update(dt);
+
+draw();
+
+requestAnimationFrame(loop);
+
+}
+
+
+
+restart();
+
+</script>
+
+</body>
+</html>
