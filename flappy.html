@@ -6,9 +6,7 @@
 <title>Flappy Bird - Malikhi Games</title>
 
 <style>
-*{
-box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
 margin:0;
@@ -16,26 +14,66 @@ background:#111827;
 color:white;
 font-family:Arial,sans-serif;
 text-align:center;
+overflow-x:hidden;
 user-select:none;
 }
 
 h1{
-margin:12px 0 5px;
+margin:12px 0 4px;
+font-size:32px;
 }
 
-.stats{
+#stats{
 font-size:20px;
+font-weight:bold;
 margin-bottom:8px;
 }
 
-#game{
-display:block;
+#gameWrap{
+position:relative;
+width:min(430px,96vw);
 margin:auto;
-border:4px solid white;
-border-radius:12px;
-max-width:95vw;
+}
+
+canvas{
+display:block;
+width:100%;
 height:auto;
+border:4px solid white;
+border-radius:18px;
+box-shadow:0 0 30px rgba(0,0,0,.5);
 touch-action:none;
+cursor:pointer;
+}
+
+#overlay{
+position:absolute;
+inset:0;
+display:flex;
+align-items:center;
+justify-content:center;
+pointer-events:none;
+padding:25px;
+}
+
+#overlayBox{
+background:rgba(0,0,0,.55);
+backdrop-filter:blur(5px);
+border:2px solid rgba(255,255,255,.5);
+border-radius:18px;
+padding:20px;
+max-width:300px;
+}
+
+#overlayTitle{
+font-size:28px;
+font-weight:bold;
+margin-bottom:8px;
+}
+
+#overlayText{
+font-size:16px;
+line-height:1.5;
 }
 
 .controls{
@@ -43,181 +81,235 @@ margin:10px;
 }
 
 button{
-background:white;
 border:0;
-border-radius:10px;
-padding:10px 18px;
+padding:10px 16px;
+border-radius:12px;
 font-size:16px;
 font-weight:bold;
 cursor:pointer;
-margin:4px;
+margin:3px;
 }
 
 button:hover{
 transform:scale(1.05);
 }
 
-#message{
-font-size:22px;
-font-weight:bold;
-min-height:30px;
+#difficulty{
+font-size:16px;
+padding:9px;
+border-radius:10px;
+margin:5px;
+}
+
+#tip{
+opacity:.8;
+margin:5px 0 15px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🐦 Flappy Bird</h1>
+<h1>🐦 FLAPPY BIRD</h1>
 
-<div class="stats">
-Score: <b id="score">0</b>
-&nbsp;&nbsp;|&nbsp;&nbsp;
-Best: <b id="best">0</b>
+<div id="stats">
+Score: <span id="score">0</span>
+&nbsp; | &nbsp;
+Best: <span id="best">0</span>
 </div>
-
-<canvas id="game" width="420" height="650"></canvas>
 
 <div class="controls">
-<button onclick="restart()">🔄 Restart</button>
-<button onclick="togglePause()">⏸️ Pause</button>
+Difficulty:
+<select id="difficulty">
+<option value="easy">Easy 😎</option>
+<option value="medium">Medium 🔥</option>
+<option value="hard">Hard 💀</option>
+</select>
+
+<button onclick="restartGame()">🔄 Restart</button>
+<button onclick="togglePause()">⏸ Pause</button>
+<button onclick="toggleSound()">🔊 Sound</button>
 </div>
 
-<p>SPACE / CLICK / TAP = FLAP</p>
+<div id="gameWrap">
 
-<div id="message"></div>
+<canvas id="game" width="430" height="650"></canvas>
 
+<div id="overlay">
+<div id="overlayBox">
+<div id="overlayTitle">🐦 FLAPPY BIRD</div>
+<div id="overlayText">
+Press SPACE, click, or tap to start!<br><br>
+Fly through the pipes and beat your best score 🔥
+</div>
+</div>
+</div>
+
+</div>
+
+<p id="tip">SPACE • CLICK • TAP = FLAP | P = PAUSE</p>
 
 <script>
 
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 
-const scoreText=document.getElementById("score");
-const bestText=document.getElementById("best");
-const message=document.getElementById("message");
+const scoreEl=document.getElementById("score");
+const bestEl=document.getElementById("best");
+const overlay=document.getElementById("overlay");
+const overlayTitle=document.getElementById("overlayTitle");
+const overlayText=document.getElementById("overlayText");
+const difficultyEl=document.getElementById("difficulty");
 
 let bird;
 let pipes=[];
 let particles=[];
 let clouds=[];
-
+let hills=[];
 let score=0;
 let best=Number(localStorage.getItem("malikhiFlappyBest")||0);
 
-let running=false;
+let state="start";
 let paused=false;
+let soundOn=true;
 
 let spawnTimer=0;
+let animationId=null;
 let lastTime=0;
 
-bestText.textContent=best;
+const audioCtx=window.AudioContext||window.webkitAudioContext;
+let audio=null;
+
+bestEl.textContent=best;
 
 
 
-// ---------- BIRD ----------
+/* ---------------- SOUND ---------------- */
 
-function resetBird(){
+function beep(freq,duration,type="sine",volume=.05){
 
-bird={
-x:105,
-y:300,
-r:17,
-vy:0,
-rotation:0
+if(!soundOn)return;
+
+try{
+
+if(!audio)audio=new audioCtx();
+
+const osc=audio.createOscillator();
+const gain=audio.createGain();
+
+osc.type=type;
+osc.frequency.value=freq;
+
+gain.gain.value=volume;
+
+osc.connect(gain);
+gain.connect(audio.destination);
+
+osc.start();
+
+gain.gain.exponentialRampToValueAtTime(
+0.001,
+audio.currentTime+duration
+);
+
+osc.stop(audio.currentTime+duration);
+
+}catch(e){}
+
+}
+
+function flapSound(){
+beep(500,.08,"square",.04);
+}
+
+function scoreSound(){
+beep(850,.12,"sine",.06);
+}
+
+function hitSound(){
+beep(120,.3,"sawtooth",.08);
+}
+
+
+
+/* ---------------- DIFFICULTY ---------------- */
+
+function settings(){
+
+const d=difficultyEl.value;
+
+if(d==="easy"){
+return{
+gap:225,
+speed:2.05,
+gravity:.31,
+flap:-6.5,
+spawn:145
+};
+}
+
+if(d==="medium"){
+return{
+gap:190,
+speed:2.5,
+gravity:.36,
+flap:-6.8,
+spawn:130
+};
+}
+
+return{
+gap:160,
+speed:3,
+gravity:.42,
+flap:-7.1,
+spawn:115
 };
 
 }
 
 
 
-// ---------- CLOUDS ----------
+/* ---------------- BIRD ---------------- */
 
-function makeClouds(){
+function resetBird(){
+
+bird={
+x:105,
+y:300,
+r:18,
+vy:0,
+rotation:0,
+wing:0
+};
+
+}
+
+
+
+/* ---------------- BACKGROUND ---------------- */
+
+function makeBackground(){
 
 clouds=[];
+hills=[];
 
-for(let i=0;i<6;i++){
+for(let i=0;i<7;i++){
 
 clouds.push({
-
-x:Math.random()*420,
-y:50+Math.random()*180,
-speed:0.2+Math.random()*0.3,
-size:25+Math.random()*25
-
+x:Math.random()*canvas.width,
+y:30+Math.random()*220,
+size:25+Math.random()*35,
+speed:.15+Math.random()*.3
 });
 
 }
-
-}
-
-
-
-// ---------- START ----------
-
-function restart(){
-
-score=0;
-scoreText.textContent=0;
-
-pipes=[];
-particles=[];
-
-spawnTimer=0;
-
-paused=false;
-
-running=true;
-
-resetBird();
-
-message.textContent="";
-
-makeClouds();
-
-lastTime=performance.now();
-
-requestAnimationFrame(loop);
-
-}
-
-
-
-// ---------- FLAP ----------
-
-function flap(){
-
-if(!running){
-
-restart();
-return;
-
-}
-
-if(paused)return;
-
-bird.vy=-6.7;
-
-createParticles();
-
-}
-
-
-
-// ---------- PARTICLES ----------
-
-function createParticles(){
 
 for(let i=0;i<5;i++){
 
-particles.push({
-
-x:bird.x-10,
-y:bird.y,
-vx:-1-Math.random()*2,
-vy:(Math.random()-0.5)*2,
-life:25
-
+hills.push({
+x:i*130,
+h:70+Math.random()*70
 });
 
 }
@@ -226,45 +318,114 @@ life:25
 
 
 
-// ---------- PIPE ----------
+/* ---------------- RESET ---------------- */
+
+function restartGame(){
+
+cancelAnimationFrame(animationId);
+
+score=0;
+scoreEl.textContent=0;
+
+pipes=[];
+particles=[];
+spawnTimer=0;
+
+paused=false;
+state="playing";
+
+resetBird();
+makeBackground();
+
+overlay.style.display="none";
+
+lastTime=performance.now();
+
+animationId=requestAnimationFrame(loop);
+
+}
+
+
+
+/* ---------------- START ---------------- */
+
+function startGame(){
+
+if(state==="start"||state==="dead"){
+
+restartGame();
+
+setTimeout(flap,30);
+
+}
+
+}
+
+
+
+/* ---------------- FLAP ---------------- */
+
+function flap(){
+
+if(state==="start"||state==="dead"){
+startGame();
+return;
+}
+
+if(state!=="playing"||paused)return;
+
+bird.vy=settings().flap;
+
+bird.wing=1;
+
+for(let i=0;i<8;i++){
+
+particles.push({
+x:bird.x-15,
+y:bird.y+(Math.random()-0.5)*10,
+vx:-1-Math.random()*2,
+vy:(Math.random()-0.5)*2,
+life:22,
+size:2+Math.random()*3
+});
+
+}
+
+flapSound();
+
+}
+
+
+
+/* ---------------- PIPES ---------------- */
 
 function spawnPipe(){
 
-// Bigger gap = easier
+const s=settings();
 
-let gap=190;
+let gap=s.gap-Math.min(score*1.2,35);
 
-// Slightly harder later
+gap=Math.max(gap,120);
 
-gap-=Math.min(score*1.2,35);
+let padding=75;
 
-let minTop=70;
+let maxTop=canvas.height-75-gap-80;
 
-let maxTop=canvas.height-170-gap;
-
-let top=
-minTop+
-Math.random()*(maxTop-minTop);
+let top=padding+Math.random()*(maxTop-padding);
 
 pipes.push({
-
 x:canvas.width+20,
-
 top:top,
-
 gap:gap,
-
-width:64,
-
+width:68,
 passed:false
-
 });
 
 }
 
 
 
-// ---------- INPUT ----------
+/* ---------------- INPUT ---------------- */
 
 document.addEventListener("keydown",e=>{
 
@@ -277,81 +438,68 @@ flap();
 }
 
 if(e.code==="KeyP"){
-
 togglePause();
-
 }
 
 });
 
-canvas.addEventListener("mousedown",flap);
+canvas.addEventListener("mousedown",e=>{
+e.preventDefault();
+flap();
+});
 
 canvas.addEventListener("touchstart",e=>{
-
 e.preventDefault();
-
 flap();
-
 },{passive:false});
 
 
 
-// ---------- PAUSE ----------
+/* ---------------- PAUSE ---------------- */
 
 function togglePause(){
 
-if(!running)return;
+if(state!=="playing")return;
 
 paused=!paused;
 
-message.textContent=paused?"⏸️ PAUSED":"";
+if(paused){
 
-}
+overlay.style.display="flex";
+overlayTitle.textContent="⏸ PAUSED";
+overlayText.textContent="Press P or the Pause button to continue";
 
+}else{
 
+overlay.style.display="none";
 
-// ---------- COLLISION ----------
-
-function collision(){
-
-// ceiling
-
-if(bird.y-bird.r<0)return true;
-
-// ground
-
-if(bird.y+bird.r>canvas.height-45)return true;
-
-
-for(const p of pipes){
-
-let bottomY=p.top+p.gap;
-
-let inX=
-bird.x+bird.r>p.x &&
-bird.x-bird.r<p.x+p.width;
-
-if(inX){
-
-if(bird.y-bird.r<p.top)return true;
-
-if(bird.y+bird.r>bottomY)return true;
+lastTime=performance.now();
 
 }
 
 }
 
-return false;
+
+
+/* ---------------- SOUND ---------------- */
+
+function toggleSound(){
+
+soundOn=!soundOn;
 
 }
 
 
 
-// ---------- GAME OVER ----------
+/* ---------------- GAME OVER ---------------- */
 
 function gameOver(){
 
-running=false;
+if(state!=="playing")return;
+
+state="dead";
+
+hitSound();
 
 if(score>best){
 
@@ -359,70 +507,82 @@ best=score;
 
 localStorage.setItem("malikhiFlappyBest",best);
 
-bestText.textContent=best;
+bestEl.textContent=best;
 
 }
 
-message.textContent=
-"💀 Game Over — click, tap, or SPACE to play again";
+overlay.style.display="flex";
+
+let medal="🥉";
+
+if(score>=10)medal="🥈";
+if(score>=20)medal="🥇";
+if(score>=40)medal="👑";
+
+overlayTitle.textContent="💀 GAME OVER";
+
+overlayText.innerHTML=
+medal+" Score: <b>"+score+"</b><br>"+
+"Best: <b>"+best+"</b><br><br>"+
+"Click, tap, or press SPACE to try again";
 
 }
 
 
 
-// ---------- UPDATE ----------
+/* ---------------- UPDATE ---------------- */
 
 function update(dt){
 
-if(paused)return;
+if(paused||state!=="playing")return;
+
+dt=Math.min(dt,1.8);
+
+const s=settings();
 
 
-// gravity
+/* Bird physics */
 
-bird.vy+=0.30*dt;
+bird.vy+=s.gravity*dt;
 
 bird.y+=bird.vy*dt;
 
+bird.rotation=Math.max(
+-.5,
+Math.min(.9,bird.vy*.09)
+);
 
-// rotation
-
-bird.rotation=
-Math.max(-0.5,Math.min(1.2,bird.vy/10));
-
-
-// pipe speed
-
-let pipeSpeed=
-2.1+Math.min(score*0.025,0.9);
+bird.wing*=.86;
 
 
-// move pipes
+/* Pipe speed */
+
+let pipeSpeed=s.speed+Math.min(score*.025,.8);
 
 for(const p of pipes){
 
 p.x-=pipeSpeed*dt;
 
-if(
-!p.passed &&
-p.x+p.width<bird.x
-){
+if(!p.passed&&p.x+p.width<bird.x){
 
 p.passed=true;
 
 score++;
 
-scoreText.textContent=score;
+scoreEl.textContent=score;
+
+scoreSound();
 
 }
 
 }
 
 
-// spawn
+/* Spawn */
 
 spawnTimer+=dt;
 
-if(spawnTimer>115){
+if(spawnTimer>s.spawn){
 
 spawnPipe();
 
@@ -431,34 +591,33 @@ spawnTimer=0;
 }
 
 
-// remove old pipes
+/* Remove old pipes */
 
-pipes=pipes.filter(p=>p.x+p.width>-20);
+pipes=pipes.filter(p=>p.x+p.width>-30);
 
 
-// clouds
+/* Clouds */
 
 for(const c of clouds){
 
 c.x-=c.speed*dt;
 
-if(c.x<-100){
+if(c.x<-120){
 
-c.x=canvas.width+50;
+c.x=canvas.width+100;
+c.y=30+Math.random()*220;
 
 }
 
 }
 
 
-// particles
+/* Particles */
 
 for(const p of particles){
 
 p.x+=p.vx*dt;
-
 p.y+=p.vy*dt;
-
 p.life-=dt;
 
 }
@@ -466,48 +625,76 @@ p.life-=dt;
 particles=particles.filter(p=>p.life>0);
 
 
-// collision
+/* Ground */
 
-if(collision()){
+const groundY=canvas.height-55;
+
+if(
+bird.y-bird.r<0||
+bird.y+bird.r>groundY
+){
 
 gameOver();
 
+return;
+
+}
+
+
+/* Pipe collision */
+
+for(const p of pipes){
+
+const bottom=p.top+p.gap;
+
+let hitX=
+bird.x+bird.r>p.x+4&&
+bird.x-bird.r<p.x+p.width-4;
+
+if(hitX){
+
+if(
+bird.y-bird.r<p.top||
+bird.y+bird.r>bottom
+){
+
+gameOver();
+
+return;
+
+}
+
+}
+
 }
 
 }
 
 
 
-// ---------- DRAW BACKGROUND ----------
+/* ---------------- DRAW BACKGROUND ---------------- */
 
 function drawBackground(){
 
-let night=
-Math.floor(score/10)%2===1;
+let night=score>=15&&Math.floor(score/15)%2===1;
 
-if(night){
+let sky=night?"#172554":"#38bdf8";
 
-ctx.fillStyle="#172554";
-
-}else{
-
-ctx.fillStyle="#60c9f2";
-
-}
+ctx.fillStyle=sky;
 
 ctx.fillRect(0,0,canvas.width,canvas.height);
 
 
-// sun/moon
+/* Sun or moon */
 
 ctx.fillStyle=night?"#f8fafc":"#fde047";
 
 ctx.beginPath();
 
 ctx.arc(
-night?330:80,
+night?340:75,
 80,
-30,
+32,
 0,
 Math.PI*2
 );
@@ -515,7 +702,27 @@ Math.PI*2
 ctx.fill();
 
 
-// clouds
+/* Stars */
+
+if(night){
+
+ctx.fillStyle="white";
+
+for(let i=0;i<35;i++){
+
+let x=(i*79)%canvas.width;
+let y=(i*47)%280;
+
+ctx.fillRect(x,y,2,2);
+
+}
+
+}
+
+
+/* Clouds */
+
+if(!night){
 
 ctx.fillStyle="rgba(255,255,255,.8)";
 
@@ -523,21 +730,30 @@ for(const c of clouds){
 
 ctx.beginPath();
 
-ctx.arc(c.x,c.y,c.size*.55,0,Math.PI*2);
+ctx.arc(c.x,c.y,c.size*.45,0,Math.PI*2);
+ctx.arc(c.x+c.size*.55,c.y+4,c.size*.65,0,Math.PI*2);
+ctx.arc(c.x+c.size*1.05,c.y,c.size*.42,0,Math.PI*2);
+
+ctx.fill();
+
+}
+
+}
+
+
+/* Hills */
+
+ctx.fillStyle=night?"#14532d":"#22c55e";
+
+for(const h of hills){
+
+ctx.beginPath();
 
 ctx.arc(
-c.x+c.size*.6,
-c.y+5,
-c.size*.7,
-0,
-Math.PI*2
-);
-
-ctx.arc(
-c.x+c.size,
-c.y,
-c.size*.5,
-0,
+h.x,
+canvas.height-40,
+h.h,
+Math.PI,
 Math.PI*2
 );
 
@@ -549,69 +765,102 @@ ctx.fill();
 
 
 
-// ---------- DRAW PIPES ----------
+/* ---------------- DRAW PIPES ---------------- */
 
 function drawPipes(){
 
 for(const p of pipes){
 
-let bottomY=p.top+p.gap;
+let bottom=p.top+p.gap;
 
 
-// pipe body
+/* Shadow */
 
-ctx.fillStyle="#22c55e";
+ctx.fillStyle="rgba(0,0,0,.18)";
 
 ctx.fillRect(
-p.x,
+p.x+6,
 0,
 p.width,
 p.top
 );
 
 ctx.fillRect(
-p.x,
-bottomY,
+p.x+6,
+bottom,
 p.width,
-canvas.height-bottomY-45
+canvas.height-bottom-55
 );
 
 
-// pipe caps
+/* Pipe body */
 
 ctx.fillStyle="#16a34a";
 
-ctx.fillRect(
-p.x-6,
-p.top-22,
-p.width+12,
-22
-);
+ctx.fillRect(p.x,0,p.width,p.top);
 
 ctx.fillRect(
-p.x-6,
-bottomY,
-p.width+12,
-22
+p.x,
+bottom,
+p.width,
+canvas.height-bottom-55
 );
 
 
-// highlights
+/* Pipe highlights */
 
 ctx.fillStyle="#4ade80";
 
 ctx.fillRect(
-p.x+9,
+p.x+10,
 0,
-8,
-p.top-22
+10,
+Math.max(0,p.top-20)
 );
 
 ctx.fillRect(
-p.x+9,
-bottomY+22,
-8,
-canvas.height-bottomY-67
+p.x+10,
+bottom+20,
+10,
+canvas.height-bottom-75
+);
+
+
+/* Caps */
+
+ctx.fillStyle="#15803d";
+
+ctx.fillRect(
+p.x-7,
+p.top-24,
+p.width+14,
+24
+);
+
+ctx.fillRect(
+p.x-7,
+bottom,
+p.width+14,
+24
+);
+
+
+/* Cap highlight */
+
+ctx.fillStyle="#22c55e";
+
+ctx.fillRect(
+p.x-3,
+p.top-22,
+p.width+6,
+6
+);
+
+ctx.fillRect(
+p.x-3,
+bottom,
+p.width+6,
+6
 );
 
 }
@@ -620,7 +869,7 @@ canvas.height-bottomY-67
 
 
 
-// ---------- DRAW BIRD ----------
+/* ---------------- DRAW BIRD ---------------- */
 
 function drawBird(){
 
@@ -631,24 +880,33 @@ ctx.translate(bird.x,bird.y);
 ctx.rotate(bird.rotation);
 
 
-// body
+/* Tail */
+
+ctx.fillStyle="#f97316";
+
+ctx.beginPath();
+
+ctx.moveTo(-14,4);
+ctx.lineTo(-30,12);
+ctx.lineTo(-17,-4);
+
+ctx.closePath();
+
+ctx.fill();
+
+
+/* Body */
 
 ctx.fillStyle="#facc15";
 
 ctx.beginPath();
 
-ctx.arc(
-0,
-0,
-bird.r,
-0,
-Math.PI*2
-);
+ctx.arc(0,0,bird.r,0,Math.PI*2);
 
 ctx.fill();
 
 
-// wing
+/* Wing */
 
 ctx.fillStyle="#eab308";
 
@@ -656,10 +914,10 @@ ctx.beginPath();
 
 ctx.ellipse(
 -5,
-5,
-10,
+5+bird.wing*4,
+12,
 6,
--0.3,
+-.3,
 0,
 Math.PI*2
 );
@@ -667,17 +925,17 @@ Math.PI*2
 ctx.fill();
 
 
-// eye
+/* Eye */
 
 ctx.fillStyle="white";
 
 ctx.beginPath();
 
-ctx.arc(7,-7,6,0,Math.PI*2);
+ctx.arc(7,-7,7,0,Math.PI*2);
 
 ctx.fill();
 
-ctx.fillStyle="black";
+ctx.fillStyle="#111";
 
 ctx.beginPath();
 
@@ -686,17 +944,15 @@ ctx.arc(9,-7,3,0,Math.PI*2);
 ctx.fill();
 
 
-// beak
+/* Beak */
 
-ctx.fillStyle="#f97316";
+ctx.fillStyle="#fb923c";
 
 ctx.beginPath();
 
-ctx.moveTo(15,0);
-
-ctx.lineTo(29,5);
-
-ctx.lineTo(15,9);
+ctx.moveTo(15,-2);
+ctx.lineTo(31,5);
+ctx.lineTo(15,11);
 
 ctx.closePath();
 
@@ -708,51 +964,21 @@ ctx.restore();
 
 
 
-// ---------- DRAW GROUND ----------
-
-function drawGround(){
-
-ctx.fillStyle="#84cc16";
-
-ctx.fillRect(
-0,
-canvas.height-45,
-canvas.width,
-45
-);
-
-ctx.fillStyle="#65a30d";
-
-for(let x=0;x<canvas.width;x+=20){
-
-ctx.fillRect(
-x,
-canvas.height-45,
-10,
-6
-);
-
-}
-
-}
-
-
-
-// ---------- DRAW PARTICLES ----------
+/* ---------------- DRAW PARTICLES ---------------- */
 
 function drawParticles(){
 
-ctx.fillStyle="#fde047";
-
 for(const p of particles){
 
-ctx.globalAlpha=p.life/25;
+ctx.globalAlpha=Math.max(0,p.life/22);
+
+ctx.fillStyle="#fef08a";
 
 ctx.fillRect(
 p.x,
 p.y,
-4,
-4
+p.size,
+p.size
 );
 
 }
@@ -763,7 +989,55 @@ ctx.globalAlpha=1;
 
 
 
-// ---------- DRAW ----------
+/* ---------------- DRAW GROUND ---------------- */
+
+function drawGround(){
+
+const y=canvas.height-55;
+
+ctx.fillStyle="#65a30d";
+
+ctx.fillRect(
+0,
+y,
+canvas.width,
+55
+);
+
+ctx.fillStyle="#84cc16";
+
+ctx.fillRect(
+0,
+y,
+canvas.width,
+10
+);
+
+ctx.fillStyle="#4d7c0f";
+
+for(let x=0;x<canvas.width;x+=24){
+
+ctx.fillRect(
+x,
+y+16,
+10,
+5
+);
+
+ctx.fillRect(
+x+12,
+y+34,
+8,
+5
+);
+
+}
+
+}
+
+
+
+/* ---------------- DRAW ---------------- */
 
 function draw(){
 
@@ -788,35 +1062,34 @@ drawBird();
 
 
 
-// ---------- LOOP ----------
+/* ---------------- LOOP ---------------- */
 
 function loop(time){
 
-if(!running){
-
+if(state!=="playing"){
 draw();
-
 return;
-
 }
 
 let dt=(time-lastTime)/16.67;
 
 lastTime=time;
 
-dt=Math.min(dt,2);
-
 update(dt);
 
 draw();
 
-requestAnimationFrame(loop);
+animationId=requestAnimationFrame(loop);
 
 }
 
 
 
-restart();
+/* ---------------- FIRST SCREEN ---------------- */
+
+resetBird();
+makeBackground();
+draw();
 
 </script>
 
