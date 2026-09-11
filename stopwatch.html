@@ -1,41 +1,542 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Stopwatch - Malikhi Games</title>
+<title>Stopwatch Challenge - Malikhi Games</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#10131a;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center;padding:20px}
-.game{width:min(700px,100%);text-align:center;background:#181d27;border:1px solid #303746;border-radius:20px;padding:24px;box-shadow:0 15px 50px #0008}
-h1{margin:0 0 6px}p{color:#aeb6c5}canvas{width:min(620px,100%);height:auto;background:#080a0f;border-radius:14px;border:1px solid #394150;display:block;margin:18px auto}
-button{border:0;border-radius:12px;padding:12px 20px;background:#fff;color:#111;font-weight:700;cursor:pointer;font-size:16px}
-.score{font-size:20px;font-weight:700}.hint{font-size:14px}
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:linear-gradient(135deg,#111827,#1e1b4b);
+  color:white;
+  font-family:Arial,sans-serif;
+  text-align:center;
+}
+
+h1{
+  margin:25px 0 5px;
+  font-size:36px;
+}
+
+.subtitle{
+  opacity:.75;
+  margin-bottom:20px;
+}
+
+#game{
+  width:min(600px,94vw);
+  margin:auto;
+  padding:25px;
+  background:rgba(255,255,255,.08);
+  border:2px solid rgba(255,255,255,.15);
+  border-radius:22px;
+  box-shadow:0 20px 50px rgba(0,0,0,.4);
+}
+
+#round{
+  font-size:20px;
+  font-weight:bold;
+  margin-bottom:15px;
+}
+
+#time{
+  font-size:58px;
+  font-weight:bold;
+  margin:20px 0;
+  font-family:monospace;
+}
+
+.bar{
+  position:relative;
+  width:100%;
+  height:55px;
+  background:#374151;
+  border-radius:15px;
+  overflow:hidden;
+  margin:25px 0;
+}
+
+.green{
+  position:absolute;
+  top:0;
+  bottom:0;
+  background:#22c55e;
+  box-shadow:0 0 20px #22c55e;
+}
+
+.marker{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:5px;
+  background:white;
+  box-shadow:0 0 10px white;
+  left:0;
+}
+
+button{
+  border:0;
+  padding:14px 25px;
+  margin:6px;
+  border-radius:13px;
+  font-size:18px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+
+#start{
+  background:#facc15;
+  color:#111;
+}
+
+#stop{
+  background:#ef4444;
+  color:white;
+}
+
+#message{
+  min-height:35px;
+  margin:15px 0;
+  font-size:21px;
+  font-weight:bold;
+}
+
+#stats{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:20px;
+}
+
+.stat{
+  background:#1f2937;
+  padding:10px 15px;
+  border-radius:12px;
+  font-weight:bold;
+}
+
+.good{
+  color:#4ade80;
+}
+
+.bad{
+  color:#f87171;
+}
+
+.hidden{
+  display:none;
+}
 </style>
 </head>
-<body><div class="game">
-<h1>⏱️ Stopwatch</h1><p>Stop the timer on target</p>
-<div class="score">Score: <span id="score">0</span> | Best: <span id="best">0</span></div>
-<canvas id="game" width="600" height="400"></canvas>
-<button id="start">Start / Restart</button>
-<p class="hint">Use your mouse or touch the game area. Move the player to catch the glowing target and avoid the red hazards.</p>
+
+<body>
+
+<h1>⏱️ STOPWATCH CHALLENGE</h1>
+
+<p class="subtitle">
+Stop the timer when the marker is inside the 🟢 GREEN zone!
+</p>
+
+<div id="game">
+
+  <div id="round">
+    Round: <span id="roundNum">0</span>
+  </div>
+
+  <div id="time">
+    0.000
+  </div>
+
+  <div class="bar">
+
+    <div id="green" class="green"></div>
+
+    <div id="marker" class="marker"></div>
+
+  </div>
+
+  <button id="start" onclick="startGame()">
+    ▶️ START
+  </button>
+
+  <button id="stop" onclick="stopGame()" disabled>
+    🛑 STOP
+  </button>
+
+  <div id="message">
+    Start when you're ready 👀
+  </div>
+
+  <div id="stats">
+
+    <div class="stat">
+      🔥 Streak:
+      <span id="streak">0</span>
+    </div>
+
+    <div class="stat">
+      ⭐ Score:
+      <span id="score">0</span>
+    </div>
+
+    <div class="stat">
+      🏆 Best:
+      <span id="best">0</span>
+    </div>
+
+    <div class="stat">
+      🎯 Zone:
+      <span id="zoneSize">20%</span>
+    </div>
+
+  </div>
+
 </div>
+
 <script>
-const c=document.getElementById('game'),x=c.getContext('2d'),scoreEl=document.getElementById('score'),bestEl=document.getElementById('best');
-let player={x:300,y:330,r:16},target={x:100,y:100,r:12},hazards=[],score=0,running=false,last=0,best=+localStorage.getItem('mg-best-stopwatch')||0;
-bestEl.textContent=best;
-function reset(){player={x:300,y:330,r:16};target={x:100+Math.random()*400,y:70+Math.random()*260,r:12};hazards=[];score=0;scoreEl.textContent=0;running=true;last=performance.now();requestAnimationFrame(loop)}
-function move(e){let r=c.getBoundingClientRect(),p=e.touches?e.touches[0]:e;player.x=(p.clientX-r.left)*c.width/r.width;player.y=(p.clientY-r.top)*c.height/r.height}
-c.addEventListener('mousemove',move);c.addEventListener('touchmove',e=>{e.preventDefault();move(e)},{passive:false});
-function addHazard(){hazards.push({x:Math.random()*570+15,y:-20,r:10+Math.random()*12,s:100+Math.random()*140})}
-function loop(t){if(!running)return;let dt=Math.min(.03,(t-last)/1000);last=t;if(Math.random()<dt*.9)addHazard();
-hazards.forEach(h=>h.y+=h.s*dt);hazards=hazards.filter(h=>h.y<430);
-let dx=player.x-target.x,dy=player.y-target.y;if(Math.hypot(dx,dy)<player.r+target.r){score++;scoreEl.textContent=score;target.x=30+Math.random()*540;target.y=50+Math.random()*300}
-for(const h of hazards)if(Math.hypot(player.x-h.x,player.y-h.y)<player.r+h.r){running=false;if(score>best){best=score;localStorage.setItem('mg-best-stopwatch',best);bestEl.textContent=best}draw(true);return}
-draw(false);requestAnimationFrame(loop)}
-function draw(over){x.clearRect(0,0,c.width,c.height);x.fillStyle='#0b0e14';x.fillRect(0,0,c.width,c.height);
-x.fillStyle='#5cf';x.beginPath();x.arc(target.x,target.y,target.r,0,Math.PI*2);x.fill();
-x.fillStyle='#f44';hazards.forEach(h=>{x.beginPath();x.arc(h.x,h.y,h.r,0,Math.PI*2);x.fill()});
-x.fillStyle='#fff';x.beginPath();x.arc(player.x,player.y,player.r,0,Math.PI*2);x.fill();
-if(over){x.fillStyle='#fff';x.font='bold 38px Arial';x.textAlign='center';x.fillText('GAME OVER',300,200);x.font='20px Arial';x.fillText('Score: '+score,300,235)}}
-draw(false);document.getElementById('start').onclick=reset;
-</script></body></html>
+
+let running=false;
+
+let startTime=0;
+
+let animation;
+
+let round=0;
+
+let score=0;
+
+let streak=0;
+
+let best=Number(
+  localStorage.getItem("malikhiStopwatchBest") || 0
+);
+
+let greenStart=40;
+
+let greenWidth=20;
+
+let direction=1;
+
+let markerPosition=0;
+
+let speed=0.55;
+
+document.getElementById("best").textContent=best;
+
+
+/* =========================
+   START GAME
+========================= */
+
+function startGame(){
+
+  if(running)return;
+
+  running=true;
+
+  startTime=performance.now();
+
+  document.getElementById("start").disabled=true;
+
+  document.getElementById("stop").disabled=false;
+
+  document.getElementById("message").textContent=
+    "STOP IT IN THE GREEN! 🟢";
+
+  document.getElementById("message").className="";
+
+  markerPosition=0;
+
+  animation=requestAnimationFrame(update);
+
+}
+
+
+
+/* =========================
+   TIMER UPDATE
+========================= */
+
+function update(now){
+
+  if(!running)return;
+
+  let elapsed=
+    (now-startTime)/1000;
+
+  document.getElementById("time").textContent=
+    elapsed.toFixed(3);
+
+
+  /*
+    Move marker back and forth.
+    It gets faster as you progress.
+  */
+
+  markerPosition+=
+    direction*speed;
+
+
+  if(markerPosition>=100){
+
+    markerPosition=100;
+
+    direction=-1;
+
+  }
+
+  if(markerPosition<=0){
+
+    markerPosition=0;
+
+    direction=1;
+
+  }
+
+
+  document.getElementById("marker").style.left=
+    "calc("+markerPosition+"% - 2px)";
+
+
+  animation=
+    requestAnimationFrame(update);
+
+}
+
+
+
+/* =========================
+   STOP
+========================= */
+
+function stopGame(){
+
+  if(!running)return;
+
+  running=false;
+
+  cancelAnimationFrame(animation);
+
+  document.getElementById("start").disabled=false;
+
+  document.getElementById("stop").disabled=true;
+
+
+  let inside=
+    markerPosition>=greenStart &&
+    markerPosition<=greenStart+greenWidth;
+
+
+  if(inside){
+
+    success();
+
+  }
+  else{
+
+    fail();
+
+  }
+
+}
+
+
+
+/* =========================
+   SUCCESS
+========================= */
+
+function success(){
+
+  round++;
+
+  score++;
+
+  streak++;
+
+
+  if(streak>best){
+
+    best=streak;
+
+    localStorage.setItem(
+      "malikhiStopwatchBest",
+      best
+    );
+
+  }
+
+
+  document.getElementById("roundNum").textContent=
+    round;
+
+  document.getElementById("score").textContent=
+    score;
+
+  document.getElementById("streak").textContent=
+    streak;
+
+  document.getElementById("best").textContent=
+    best;
+
+
+  document.getElementById("message").textContent=
+    "🔥 PERFECT! You're cooking!";
+
+  document.getElementById("message").className=
+    "good";
+
+
+  /*
+    MAKE IT HARDER
+  */
+
+  greenWidth=
+    Math.max(
+      5,
+      greenWidth-2
+    );
+
+
+  speed=
+    Math.min(
+      1.8,
+      speed+0.12
+    );
+
+
+  /*
+    Move the green zone
+    to a random position.
+  */
+
+  greenStart=
+    Math.random()*(100-greenWidth);
+
+
+  updateGreen();
+
+
+  document.getElementById("zoneSize").textContent=
+    greenWidth.toFixed(0)+"%";
+
+}
+
+
+
+/* =========================
+   FAIL
+========================= */
+
+function fail(){
+
+  streak=0;
+
+  document.getElementById("streak").textContent=
+    0;
+
+
+  document.getElementById("message").textContent=
+    "💀 MISSED! You gotta hit the green!";
+
+
+  document.getElementById("message").className=
+    "bad";
+
+
+  /*
+    Reset difficulty a little,
+    but don't make it completely easy.
+  */
+
+  greenWidth=
+    Math.min(
+      20,
+      greenWidth+1
+    );
+
+
+  speed=
+    Math.max(
+      0.55,
+      speed-0.05
+    );
+
+
+  updateGreen();
+
+
+  document.getElementById("zoneSize").textContent=
+    greenWidth.toFixed(0)+"%";
+
+}
+
+
+
+/* =========================
+   GREEN ZONE
+========================= */
+
+function updateGreen(){
+
+  const green=
+    document.getElementById("green");
+
+  green.style.left=
+    greenStart+"%";
+
+  green.style.width=
+    greenWidth+"%";
+
+}
+
+
+
+/* =========================
+   KEYBOARD
+========================= */
+
+document.addEventListener("keydown",e=>{
+
+  if(e.code==="Space"){
+
+    e.preventDefault();
+
+    if(!running){
+
+      startGame();
+
+    }
+    else{
+
+      stopGame();
+
+    }
+
+  }
+
+});
+
+
+
+/* =========================
+   INITIAL
+========================= */
+
+updateGreen();
+
+</script>
+
+</body>
+</html>
