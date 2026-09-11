@@ -6,7 +6,9 @@
 <title>Flappy Bird - Malikhi Games</title>
 
 <style>
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+}
 
 body{
   margin:0;
@@ -33,18 +35,25 @@ h1{
   margin:8px;
 }
 
-button{
+button,
+select{
   border:0;
-  padding:10px 16px;
+  padding:10px 15px;
   border-radius:11px;
-  font-size:16px;
+  font-size:15px;
   font-weight:bold;
   cursor:pointer;
   margin:3px;
 }
 
-button:hover{
-  transform:scale(1.05);
+button:hover,
+select:hover{
+  transform:scale(1.04);
+}
+
+#startBtn{
+  background:#facc15;
+  color:#111;
 }
 
 #gameWrap{
@@ -76,11 +85,11 @@ canvas{
 }
 
 #overlayBox{
-  background:rgba(15,23,42,.94);
+  background:rgba(15,23,42,.95);
   border:2px solid white;
   border-radius:18px;
   padding:22px;
-  width:85%;
+  width:86%;
   max-width:350px;
 }
 
@@ -117,8 +126,19 @@ canvas{
 </div>
 
 <div class="controls">
+
+  <label>
+    Difficulty:
+    <select id="difficulty">
+      <option value="easy">😎 Easy</option>
+      <option value="medium" selected>🔥 Medium</option>
+      <option value="hard">💀 Hard</option>
+    </select>
+  </label>
+
   <button onclick="restartGame()">🔄 Restart</button>
   <button onclick="togglePause()">⏸ Pause</button>
+
 </div>
 
 <div id="gameWrap">
@@ -132,11 +152,10 @@ canvas{
     <div id="overlayTitle">🐦 FLAPPY BIRD</div>
 
     <div id="overlayText">
-      SPACE / CLICK / TAP to flap.<br><br>
-      ⚠️ HARD MODE<br>
-      The pipes get faster and the gaps get smaller.
+      Choose your difficulty above.<br><br>
+      SPACE / CLICK / TAP = FLAP
       <br><br>
-      Good luck 💀
+      Let's see how far you can get 💀
     </div>
 
   </div>
@@ -146,7 +165,11 @@ canvas{
 </div>
 
 <p id="message"></p>
-<p id="tip">SPACE • CLICK • TAP = FLAP | P = PAUSE</p>
+
+<p id="tip">
+SPACE • CLICK • TAP = FLAP &nbsp; | &nbsp; P = PAUSE
+</p>
+
 
 <script>
 
@@ -156,6 +179,7 @@ const ctx=canvas.getContext("2d");
 const scoreEl=document.getElementById("score");
 const bestEl=document.getElementById("best");
 const messageEl=document.getElementById("message");
+const difficultyEl=document.getElementById("difficulty");
 
 let bird;
 let pipes=[];
@@ -163,7 +187,10 @@ let particles=[];
 let clouds=[];
 
 let score=0;
-let best=Number(localStorage.getItem("malikhiFlappyBest")||0);
+
+let best=Number(
+  localStorage.getItem("malikhiFlappyBest")||0
+);
 
 let state="start";
 let paused=false;
@@ -173,6 +200,88 @@ let lastTime=0;
 let animationId;
 
 bestEl.textContent=best;
+
+
+/* =========================
+   DIFFICULTY SETTINGS
+========================= */
+
+function getSettings(){
+
+  const difficulty=difficultyEl.value;
+
+  if(difficulty==="easy"){
+
+    return{
+
+      /*
+        Slightly harder than
+        the old easy mode.
+      */
+
+      gap:205,
+      minGap:145,
+
+      speed:2.25,
+      maxSpeed:4.1,
+
+      gravity:.34,
+      flap:-6.8,
+
+      spawn:122,
+
+      shrinkEvery:5,
+      shrinkAmount:4
+
+    };
+
+  }
+
+
+  if(difficulty==="hard"){
+
+    return{
+
+      gap:160,
+      minGap:105,
+
+      speed:3.15,
+      maxSpeed:6.0,
+
+      gravity:.43,
+      flap:-7.15,
+
+      spawn:102,
+
+      shrinkEvery:3,
+      shrinkAmount:6
+
+    };
+
+  }
+
+
+  /* MEDIUM */
+
+  return{
+
+    gap:185,
+    minGap:120,
+
+    speed:2.65,
+    maxSpeed:5.1,
+
+    gravity:.38,
+    flap:-7.0,
+
+    spawn:112,
+
+    shrinkEvery:4,
+    shrinkAmount:5
+
+  };
+
+}
 
 
 
@@ -206,10 +315,15 @@ function makeClouds(){
   for(let i=0;i<7;i++){
 
     clouds.push({
+
       x:Math.random()*430,
-      y:40+Math.random()*220,
+
+      y:35+Math.random()*220,
+
       size:25+Math.random()*35,
+
       speed:.15+Math.random()*.35
+
     });
 
   }
@@ -219,7 +333,7 @@ function makeClouds(){
 
 
 /* =========================
-   START
+   START / RESTART
 ========================= */
 
 function restartGame(){
@@ -227,6 +341,7 @@ function restartGame(){
   cancelAnimationFrame(animationId);
 
   score=0;
+
   scoreEl.textContent=0;
 
   pipes=[];
@@ -235,17 +350,20 @@ function restartGame(){
   spawnTimer=0;
 
   paused=false;
+
   state="playing";
 
   resetBird();
   makeClouds();
 
   overlay.style.display="none";
+
   messageEl.textContent="";
 
   lastTime=performance.now();
 
-  animationId=requestAnimationFrame(loop);
+  animationId=
+    requestAnimationFrame(loop);
 
 }
 
@@ -257,30 +375,37 @@ function restartGame(){
 
 function flap(){
 
-  if(state==="start"||state==="dead"){
+  if(state==="start" || state==="dead"){
 
     restartGame();
 
   }
 
-  if(state!=="playing"||paused)return;
+  if(state!=="playing" || paused)return;
 
-  /*
-    Harder jump:
-    stronger gravity + shorter flap
-  */
+  const s=getSettings();
 
-  bird.vy=-6.9;
+  bird.vy=s.flap;
+
   bird.wing=1;
 
-  for(let i=0;i<7;i++){
+
+  for(let i=0;i<8;i++){
 
     particles.push({
+
       x:bird.x-12,
-      y:bird.y,
+
+      y:bird.y+(Math.random()-.5)*8,
+
       vx:-1-Math.random()*2,
+
       vy:(Math.random()-.5)*2,
-      life:20
+
+      life:20,
+
+      size:2+Math.random()*3
+
     });
 
   }
@@ -298,6 +423,7 @@ document.addEventListener("keydown",e=>{
   if(e.code==="Space"){
 
     e.preventDefault();
+
     flap();
 
   }
@@ -310,13 +436,21 @@ document.addEventListener("keydown",e=>{
 
 });
 
-canvas.addEventListener("mousedown",flap);
+
+canvas.addEventListener(
+  "mousedown",
+  flap
+);
+
 
 canvas.addEventListener(
   "touchstart",
   e=>{
+
     e.preventDefault();
+
     flap();
+
   },
   {passive:false}
 );
@@ -337,12 +471,17 @@ function togglePause(){
 
     overlay.style.display="flex";
 
-    document.getElementById("overlayTitle").textContent="⏸ PAUSED";
+    document.getElementById(
+      "overlayTitle"
+    ).textContent="⏸ PAUSED";
 
-    document.getElementById("overlayText").textContent=
-      "Press P or Pause to keep flying.";
+    document.getElementById(
+      "overlayText"
+    ).textContent=
+      "Press P or Pause to continue.";
 
-  }else{
+  }
+  else{
 
     overlay.style.display="none";
 
@@ -355,28 +494,34 @@ function togglePause(){
 
 
 /* =========================
-   PIPE SPAWNING
+   SPAWN PIPE
 ========================= */
 
 function spawnPipe(){
 
-  /*
-    Starts difficult and gets MUCH harder.
-  */
+  const s=getSettings();
 
-  let gap=175;
 
   /*
-    Every 4 points the gap shrinks.
+    Gap slowly gets smaller.
   */
 
-  gap-=Math.floor(score/4)*7;
+  let gap=
+    s.gap-
+    Math.floor(score/s.shrinkEvery)*
+    s.shrinkAmount;
+
+
+  gap=Math.max(
+    s.minGap,
+    gap
+  );
+
 
   /*
-    Minimum gap = 105.
+    Keep pipes away from
+    impossible top/bottom edges.
   */
-
-  gap=Math.max(105,gap);
 
   const topMin=55;
 
@@ -384,23 +529,26 @@ function spawnPipe(){
 
   const maxTop=
     canvas.height-
-    55-
+    50-
     bottomMin-
     gap;
 
+
   const top=
     topMin+
-    Math.random()*(maxTop-topMin);
+    Math.random()*
+    Math.max(1,maxTop-topMin);
+
 
   pipes.push({
 
-    x:canvas.width+20,
+    x:canvas.width+25,
 
     top:top,
 
     gap:gap,
 
-    width:65,
+    width:66,
 
     passed:false
 
@@ -416,30 +564,45 @@ function spawnPipe(){
 
 function update(dt){
 
-  if(paused||state!=="playing")return;
+  if(paused || state!=="playing")return;
+
+  dt=Math.min(dt,1.8);
+
+  const s=getSettings();
+
 
   /*
-    HARD GRAVITY
+    GRAVITY
   */
 
-  bird.vy+=0.39*dt;
+  bird.vy+=s.gravity*dt;
 
   bird.y+=bird.vy*dt;
 
+
   bird.rotation=
     Math.max(
-      -.6,
-      Math.min(1.25,bird.vy/8)
+      -.55,
+      Math.min(
+        1.15,
+        bird.vy/8
+      )
     );
 
 
+  bird.wing*=.86;
+
+
   /*
-    SPEED RAMPS UP FAST
+    PIPE SPEED
   */
 
-  let speed=
-    2.8+
-    Math.min(score*.045,2.7);
+  const speed=
+    Math.min(
+      s.speed+
+      score*.055,
+      s.maxSpeed
+    );
 
 
   /*
@@ -449,6 +612,7 @@ function update(dt){
   for(const p of pipes){
 
     p.x-=speed*dt;
+
 
     if(
       !p.passed &&
@@ -467,16 +631,18 @@ function update(dt){
 
 
   /*
-    MUCH MORE FREQUENT PIPES
+    PIPE SPAWN
   */
 
   spawnTimer+=dt;
 
-  let spawnRate=
+
+  const spawnRate=
     Math.max(
-      92,
-      112-score*.45
+      82,
+      s.spawn-score*.65
     );
+
 
   if(spawnTimer>=spawnRate){
 
@@ -487,9 +653,10 @@ function update(dt){
   }
 
 
-  pipes=pipes.filter(
-    p=>p.x+p.width>-30
-  );
+  pipes=
+    pipes.filter(
+      p=>p.x+p.width>-35
+    );
 
 
   /*
@@ -516,10 +683,13 @@ function update(dt){
   for(const p of particles){
 
     p.x+=p.vx*dt;
+
     p.y+=p.vy*dt;
+
     p.life-=dt;
 
   }
+
 
   particles=
     particles.filter(
@@ -528,10 +698,12 @@ function update(dt){
 
 
   /*
-    WALL COLLISION
+    WALLS
   */
 
-  const ground=canvas.height-50;
+  const ground=
+    canvas.height-50;
+
 
   if(
     bird.y-bird.r<=0 ||
@@ -539,13 +711,14 @@ function update(dt){
   ){
 
     gameOver();
+
     return;
 
   }
 
 
   /*
-    PIPE COLLISION
+    PIPES
   */
 
   for(const p of pipes){
@@ -553,11 +726,13 @@ function update(dt){
     const bottom=
       p.top+p.gap;
 
-    const insideX=
+
+    const hitX=
       bird.x+bird.r>p.x &&
       bird.x-bird.r<p.x+p.width;
 
-    if(insideX){
+
+    if(hitX){
 
       if(
         bird.y-bird.r<p.top ||
@@ -565,6 +740,7 @@ function update(dt){
       ){
 
         gameOver();
+
         return;
 
       }
@@ -587,9 +763,13 @@ function gameOver(){
 
   state="dead";
 
+  let newRecord=false;
+
   if(score>best){
 
     best=score;
+
+    newRecord=true;
 
     localStorage.setItem(
       "malikhiFlappyBest",
@@ -600,37 +780,54 @@ function gameOver(){
 
   }
 
+
   overlay.style.display="flex";
+
 
   document.getElementById(
     "overlayTitle"
-  ).textContent="💀 GAME OVER";
+  ).textContent=
+    newRecord
+    ? "🏆 NEW RECORD!"
+    : "💀 GAME OVER";
+
 
   document.getElementById(
     "overlayText"
   ).innerHTML=
+
     "Score: <b>"+score+"</b><br>"+
     "Best: <b>"+best+"</b><br><br>"+
-    "Click, tap, or press SPACE to try again.";
+
+    (
+      newRecord
+      ? "YOU BEAT YOUR HIGH SCORE 🔥"
+      : "Try to beat your record!"
+    )+
+
+    "<br><br>"+
+    "Click, tap, or SPACE to play again.";
 
 }
 
 
 
 /* =========================
-   BACKGROUND DRAW
+   DRAW BACKGROUND
 ========================= */
 
 function drawBackground(){
 
-  let night=
+  const night=
     score>=12 &&
     Math.floor(score/12)%2===1;
+
 
   ctx.fillStyle=
     night
     ?"#172554"
     :"#38bdf8";
+
 
   ctx.fillRect(
     0,
@@ -648,6 +845,7 @@ function drawBackground(){
     night
     ?"#f8fafc"
     :"#fde047";
+
 
   ctx.beginPath();
 
@@ -672,10 +870,15 @@ function drawBackground(){
 
     for(let i=0;i<40;i++){
 
-      let x=(i*83)%430;
-      let y=(i*47)%280;
+      const x=(i*83)%430;
+      const y=(i*47)%280;
 
-      ctx.fillRect(x,y,2,2);
+      ctx.fillRect(
+        x,
+        y,
+        2,
+        2
+      );
 
     }
 
@@ -690,6 +893,7 @@ function drawBackground(){
 
     ctx.fillStyle=
       "rgba(255,255,255,.8)";
+
 
     for(const c of clouds){
 
@@ -730,7 +934,7 @@ function drawBackground(){
 
 
 /* =========================
-   PIPES DRAW
+   DRAW PIPES
 ========================= */
 
 function drawPipes(){
@@ -748,12 +952,14 @@ function drawPipes(){
     ctx.fillStyle=
       "rgba(0,0,0,.2)";
 
+
     ctx.fillRect(
       p.x+6,
       0,
       p.width,
       p.top
     );
+
 
     ctx.fillRect(
       p.x+6,
@@ -769,12 +975,14 @@ function drawPipes(){
 
     ctx.fillStyle="#16a34a";
 
+
     ctx.fillRect(
       p.x,
       0,
       p.width,
       p.top
     );
+
 
     ctx.fillRect(
       p.x,
@@ -790,12 +998,14 @@ function drawPipes(){
 
     ctx.fillStyle="#15803d";
 
+
     ctx.fillRect(
       p.x,
       0,
       7,
       p.top
     );
+
 
     ctx.fillRect(
       p.x,
@@ -811,26 +1021,35 @@ function drawPipes(){
 
     ctx.fillStyle="#4ade80";
 
+
     ctx.fillRect(
       p.x+11,
       0,
       9,
-      Math.max(0,p.top-22)
+      Math.max(
+        0,
+        p.top-23
+      )
     );
+
 
     ctx.fillRect(
       p.x+11,
-      bottom+22,
+      bottom+23,
       9,
-      canvas.height-bottom-72
+      Math.max(
+        0,
+        canvas.height-bottom-73
+      )
     );
 
 
     /*
-      TOP CAPS
+      CAPS
     */
 
     ctx.fillStyle="#15803d";
+
 
     ctx.fillRect(
       p.x-7,
@@ -838,6 +1057,7 @@ function drawPipes(){
       p.width+14,
       23
     );
+
 
     ctx.fillRect(
       p.x-7,
@@ -853,12 +1073,14 @@ function drawPipes(){
 
     ctx.fillStyle="#22c55e";
 
+
     ctx.fillRect(
       p.x-3,
       p.top-20,
       p.width+6,
       5
     );
+
 
     ctx.fillRect(
       p.x-3,
@@ -874,7 +1096,7 @@ function drawPipes(){
 
 
 /* =========================
-   BIRD DRAW
+   DRAW BIRD
 ========================= */
 
 function drawBird(){
@@ -900,7 +1122,7 @@ function drawBird(){
   ctx.beginPath();
 
   ctx.moveTo(-13,4);
-  ctx.lineTo(-29,12);
+  ctx.lineTo(-30,12);
   ctx.lineTo(-17,-4);
 
   ctx.closePath();
@@ -966,6 +1188,7 @@ function drawBird(){
 
   ctx.fill();
 
+
   ctx.fillStyle="#111";
 
   ctx.beginPath();
@@ -990,12 +1213,15 @@ function drawBird(){
   ctx.beginPath();
 
   ctx.moveTo(15,-2);
+
   ctx.lineTo(31,5);
+
   ctx.lineTo(15,11);
 
   ctx.closePath();
 
   ctx.fill();
+
 
   ctx.restore();
 
@@ -1019,8 +1245,8 @@ function drawParticles(){
     ctx.fillRect(
       p.x,
       p.y,
-      4,
-      4
+      p.size,
+      p.size
     );
 
   }
@@ -1040,6 +1266,7 @@ function drawGround(){
   const y=
     canvas.height-50;
 
+
   ctx.fillStyle="#65a30d";
 
   ctx.fillRect(
@@ -1048,6 +1275,7 @@ function drawGround(){
     canvas.width,
     50
   );
+
 
   ctx.fillStyle="#84cc16";
 
@@ -1058,9 +1286,15 @@ function drawGround(){
     9
   );
 
+
   ctx.fillStyle="#4d7c0f";
 
-  for(let x=0;x<canvas.width;x+=22){
+
+  for(
+    let x=0;
+    x<canvas.width;
+    x+=22
+  ){
 
     ctx.fillRect(
       x,
@@ -1096,9 +1330,13 @@ function draw(){
   );
 
   drawBackground();
+
   drawPipes();
+
   drawGround();
+
   drawParticles();
+
   drawBird();
 
 }
@@ -1114,20 +1352,26 @@ function loop(time){
   if(state!=="playing"){
 
     draw();
+
     return;
 
   }
 
+
   let dt=
     (time-lastTime)/16.67;
 
+
   lastTime=time;
 
+
   dt=Math.min(dt,2);
+
 
   update(dt);
 
   draw();
+
 
   animationId=
     requestAnimationFrame(loop);
@@ -1141,7 +1385,9 @@ function loop(time){
 ========================= */
 
 resetBird();
+
 makeClouds();
+
 draw();
 
 </script>
